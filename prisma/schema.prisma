@@ -24,3 +24,58 @@ model Post {
 
   user User @relation(fields: [userId], references: [id])
 }
+
+
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL")
+}
+
+
+enum Role {
+  OWNER
+  LAWYER
+  ADMIN
+}
+
+
+model User {
+  id String @id @default(uuid())
+  email String @unique
+  password String
+  name String
+  role Role @default(OWNER)
+  businesses Business[] @relation("OwnerBusinesses")
+  assignedBusinesses Business[] @relation("LawyerBusinesses")
+  consultations Consultation[]
+  createdAt DateTime @default(now())
+}
+
+
+model Business {
+  id String @id @default(uuid())
+  name String
+  ownerId String?
+  owner User? @relation("OwnerBusinesses", fields: [ownerId], references: [id])
+  lawyerId String?
+  lawyer User? @relation("LawyerBusinesses", fields: [lawyerId], references: [id])
+  nib String? @unique
+  permits Permit[]
+  files File[]
+  consultations Consultation[]
+  createdAt DateTime @default(now())
+}
+
+
+model Permit {
+  id String @id @default(uuid())
+  businessId String
+  business Business @relation(fields: [businessId], references: [id])
+  filename String
+}-
