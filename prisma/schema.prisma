@@ -7,75 +7,71 @@ generator client {
   provider = "prisma-client-js"
 }
 
-model User {
-  id        Int      @id @default(autoincrement())
-  name      String
-  email     String   @unique
-  createdAt DateTime @default(now())
-  posts     Post[]
-}
-
-model Post {
-  id        Int      @id @default(autoincrement())
-  title     String
-  content   String?
-  userId    Int
-  createdAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id])
-}
-
-
-
-generator client {
-  provider = "prisma-client-js"
-}
-
-
-datasource db {
-  provider = "postgresql"
-  url = env("DATABASE_URL")
-}
-
-
 enum Role {
   OWNER
   LAWYER
   ADMIN
 }
 
-
 model User {
-  id String @id @default(uuid())
-  email String @unique
-  password String
-  name String
-  role Role @default(OWNER)
-  businesses Business[] @relation("OwnerBusinesses")
+  id        String         @id @default(uuid())
+  email     String         @unique
+  password  String
+  name      String
+  role      Role           @default(OWNER)
+  businesses Business[]    @relation("OwnerBusinesses")
   assignedBusinesses Business[] @relation("LawyerBusinesses")
   consultations Consultation[]
-  createdAt DateTime @default(now())
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
 }
-
 
 model Business {
-  id String @id @default(uuid())
-  name String
-  ownerId String?
-  owner User? @relation("OwnerBusinesses", fields: [ownerId], references: [id])
-  lawyerId String?
-  lawyer User? @relation("LawyerBusinesses", fields: [lawyerId], references: [id])
-  nib String? @unique
-  permits Permit[]
-  files File[]
+  id        String         @id @default(uuid())
+  name      String
+  ownerId   String?
+  owner     User?          @relation("OwnerBusinesses", fields: [ownerId], references: [id], onDelete: SetNull)
+  lawyerId  String?
+  lawyer    User?          @relation("LawyerBusinesses", fields: [lawyerId], references: [id], onDelete: SetNull)
+  nib       String?        @unique
+  permits   Permit[]
+  files     File[]
   consultations Consultation[]
-  createdAt DateTime @default(now())
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
 }
 
-
 model Permit {
-  id String @id @default(uuid())
+  id         String    @id @default(uuid())
   businessId String
-  business Business @relation(fields: [businessId], references: [id])
-  filename String
-}-
+  business   Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  filename   String
+  createdAt  DateTime  @default(now())
+}
+
+model File {
+  id         String    @id @default(uuid())
+  businessId String
+  business   Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  filename   String
+  url        String
+  createdAt  DateTime  @default(now())
+}
+
+model Consultation {
+  id         String    @id @default(uuid())
+  businessId String
+  business   Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  lawyerId   String?
+  lawyer     User?     @relation(fields: [lawyerId], references: [id], onDelete: SetNull)
+  status     ConsultationStatus @default(PENDING)
+  notes      String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
+enum ConsultationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
