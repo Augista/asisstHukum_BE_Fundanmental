@@ -59,19 +59,27 @@
   const auth = { Authorization: `Bearer ${token}` };
 
   // Logout
-  logout.onclick = () => {
-    localStorage.removeItem('token');
-    window.location.href = '/login.html';
-  };
+  //logout.onclick = () => {
+    //localStorage.removeItem('token');
+    //window.location.href = '/login.html';
+  //};
 
   const loadProfile = async () => {
-    const res = await fetch('/api/users/me', { headers: auth });
+    const res = await fetch('/api/users/me', {
+      method: 'GET',
+      mode: 'cors',
+      headers: auth
+    });
     const user = await res.json();
     userInfo.textContent = `${user.name} (${user.email})`;
   };
 
   const loadFiles = async () => {
-    const res = await fetch('/api/files/my', { headers: auth });
+    const res = await fetch('/api/files/my', {
+      method: 'GET',
+      mode: 'cors',
+      headers: auth
+    });
     const files = await res.json();
     fileList.innerHTML = files.map(f => `
       <li class="list-group-item d-flex justify-content-between align-items-center">
@@ -85,7 +93,11 @@
   };
 
   const delFile = async (id) => {
-    await fetch('/api/files/' + id, { method: 'DELETE', headers: auth });
+    await fetch('/api/files/' + id, {
+      method: 'DELETE',
+      mode: 'cors',
+      headers: auth
+    });
     loadFiles();
   };
 
@@ -96,13 +108,22 @@
     const form = new FormData();
     form.append("file", file);
 
-    await fetch('/api/files/upload', { method: 'POST', headers: auth, body: form });
+    await fetch('/api/files/upload', {
+      method: 'POST',
+      mode: 'cors',
+      headers: auth,
+      body: form
+    });
     fileInput.value = "";
     loadFiles();
   };
 
   const loadConsult = async () => {
-    const res = await fetch('/api/consult/my', { headers: auth });
+    const res = await fetch('/api/consult/my', {
+      method: 'GET',
+      mode: 'cors',
+      headers: auth
+    });
     const items = await res.json();
     consultList.innerHTML = items.map(c => `
       <li class="list-group-item">
@@ -116,6 +137,7 @@
     if (!note) return alert("Isi dulu deskripsinya!");
     await fetch('/api/consult', {
       method: 'POST',
+      mode: 'cors',
       headers: { ...auth, 'Content-Type': 'application/json' },
       body: JSON.stringify({ note })
     });

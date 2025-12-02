@@ -14,7 +14,7 @@ enum Role {
 }
 
 model User {
-  id        String         @id @default(uuid())
+  id        Int            @id @default(autoincrement())
   email     String         @unique
   password  String
   name      String
@@ -27,31 +27,31 @@ model User {
 }
 
 model Business {
-  id        String         @id @default(uuid())
-  name      String
-  ownerId   String?
-  owner     User?          @relation("OwnerBusinesses", fields: [ownerId], references: [id], onDelete: SetNull)
-  lawyerId  String?
-  lawyer    User?          @relation("LawyerBusinesses", fields: [lawyerId], references: [id], onDelete: SetNull)
-  nib       String?        @unique
-  permits   Permit[]
-  files     File[]
+  id            Int            @id @default(autoincrement())
+  name          String
+  ownerId       Int?
+  owner         User?          @relation("OwnerBusinesses", fields: [ownerId], references: [id], onDelete: SetNull)
+  lawyerId      Int?
+  lawyer        User?          @relation("LawyerBusinesses", fields: [lawyerId], references: [id], onDelete: SetNull)
+  nib           String?        @unique
+  permits       Permit[]
+  files         File[]
   consultations Consultation[]
-  createdAt DateTime       @default(now())
-  updatedAt DateTime       @updatedAt
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 }
 
 model Permit {
-  id         String    @id @default(uuid())
-  businessId String
+  id         Int       @id @default(autoincrement())
+  businessId Int
   business   Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
   filename   String
   createdAt  DateTime  @default(now())
 }
 
 model File {
-  id         String    @id @default(uuid())
-  businessId String
+  id         Int       @id @default(autoincrement())
+  businessId Int
   business   Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
   filename   String
   url        String
@@ -59,10 +59,10 @@ model File {
 }
 
 model Consultation {
-  id         String    @id @default(uuid())
-  businessId String
+  id         Int       @id @default(autoincrement())
+  businessId Int
   business   Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  lawyerId   String?
+  lawyerId   Int?
   lawyer     User?     @relation(fields: [lawyerId], references: [id], onDelete: SetNull)
   status     ConsultationStatus @default(PENDING)
   notes      String?

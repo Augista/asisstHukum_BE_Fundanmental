@@ -1,25 +1,47 @@
-import express from "express";
-import cors from "cors";
-import dotenv from "dotenv";
-import { PrismaClient } from "@prisma/client";
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
-import path from "path";
-import { fileURLToPath } from "url";
-import { authMiddleware } from "./middleware/auth.js";
+const express = require('express');
+const cors = require('cors');
+const dotenv = require('dotenv');
+const { PrismaClient } = require('@prisma/client');
+const path = require('path');
 
 dotenv.config();
 const prisma = new PrismaClient();
 const app = express();
-app.use(cors());
+
+// CORS configuration
+const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:3001,http://localhost:3000')
+  .split(',')
+  .map(o => o.trim());
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // allow requests with no origin (like mobile apps, Postman)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+      return callback(new Error('Not allowed by CORS'));
+    },
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
+  })
+);
+
 app.use(express.json());
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
+// Static files
 app.use(express.static(path.join(__dirname, "..", "public")));
 
-// app.get("/", (req, res) => res.send("Udah Running nih gais"));
+// Import routers and middleware
+const apiRouter = require('./routes/route');
+const errorHandler = require('./middleware/errorHandler');
+
+
+
+// Mount API routes
+app.use('/api', apiRouter);
+
+// HTML routes
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "..", "public", "login.html"));
 });
@@ -28,54 +50,13 @@ app.get("/dashboard.html", (req, res) => {
   res.sendFile(path.join(__dirname, "..", "public", "dashboard.html"));
 });
 
-app.post("/api/register", async (req, res) => {
-  const { name, email, password } = req.body;
-  if (!email || !password || !name) return res.status(400).json({ error: "name,email,password required" });
-  try {
-    const hash = await bcrypt.hash(password, 10);
-    const user = await prisma.user.create({
-      data: { name, email, password: hash }
-    });
-    res.json({ id: user.id, name: user.name, email: user.email });
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-});
+// Error handler middleware (must be after all routes)
+app.use(errorHandler);
 
-app.post("/api/login", async (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password) return res.status(400).json({ error: "email & password required" });
-
-  try {
-    const user = await prisma.user.findUnique({ where: { email } });
-    if (!user || !user.password) return res.status(401).json({ error: "invalid credentials" });
-
-    const valid = await bcrypt.compare(password, user.password);
-    if (!valid) return res.status(401).json({ error: "invalid credentials" });
-
-    const token = jwt.sign({ userId: user.id, email: user.email }, process.env.JWT_SECRET, { expiresIn: "8h" });
-    res.json({ token });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.get("/api/me", authMiddleware, async (req, res) => {
-  try {
-    const user = await prisma.user.findUnique({ where: { id: req.user.userId }, select: { id: true, name: true, email: true, createdAt: true }});
-    res.json(user);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.get("/api/protected-data", authMiddleware, (req, res) => {
-  res.json({ message: `Halo user ${req.user.email}, ini data rahasiamu.` });
-});
-
+// Catch-all route for SPA
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "..", "public", "login.html"));
 });
 
 const port = process.env.PORT || 3001;
-app.listen(port, () => console.log(`Server listening on port ${port}`));
+app.listen(port, () => console.log(`🚀 Server listening on port ${port}`));

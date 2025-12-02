@@ -1,45 +1,148 @@
-import { prisma } from "../utils/prisma.js";
-import path from "path";
-import fs from "fs";
+const prisma = require('../utils/prismaClient');
+const path = require('path');
+const fs = require('fs');
 
-export const uploadFile = async (req, res) => {
-  if (!req.file) return res.status(400).json({ error: "No file uploaded" });
-
-  const file = await prisma.file.create({
-    data: {
-      filename: req.file.originalname,
-      path: req.file.filename,
-      userId: req.user.id
+async function uploadFile(req, res, next) {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'No file uploaded'
+      });
     }
-  });
 
-  res.json(file);
-};
+    const businessId = Number(req.params.businessId || req.body.businessId);
 
-export const getMyFiles = async (req, res) => {
-  const files = await prisma.file.findMany({
-    where: { userId: req.user.id },
-    orderBy: { createdAt: "desc" }
-  });
-  res.json(files);
-};
+    if (Number.isNaN(businessId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid businessId'
+      });
+    }
 
-export const downloadFile = async (req, res) => {
-  const file = await prisma.file.findUnique({ where: { id: req.params.id } });
-  if (!file || file.userId !== req.user.id)
-    return res.status(404).json({ error: "Not found" });
+    const file = await prisma.file.create({
+      data: {
+        businessId,
+        filename: req.file.originalname,
+        url: req.file.filename
+      }
+    });
 
-  const filePath = path.join("src/uploads", file.path);
-  res.sendFile(path.resolve(filePath));
-};
+    res.status(201).json({
+      success: true,
+      message: 'File uploaded successfully',
+      data: file
+    });
+  } catch (error) {
+    next(error);
+  }
+}
 
-export const deleteFile = async (req, res) => {
-  const file = await prisma.file.findUnique({ where: { id: req.params.id } });
-  if (!file || file.userId !== req.user.id)
-    return res.status(404).json({ error: "Not found" });
+async function getBusinessFiles(req, res, next) {
+  try {
+    const businessId = Number(req.params.businessId);
 
-  fs.unlinkSync(path.join("src/uploads", file.path));
-  await prisma.file.delete({ where: { id: req.params.id } });
+    if (Number.isNaN(businessId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid businessId'
+      });
+    }
 
-  res.json({ message: "Deleted" });
+    const files = await prisma.file.findMany({
+      where: { businessId },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    res.json({
+      success: true,
+      message: 'Files fetched successfully',
+      data: files
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function downloadFile(req, res, next) {
+  try {
+    const id = Number(req.params.id);
+
+    if (Number.isNaN(id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid file id'
+      });
+    }
+
+    const file = await prisma.file.findUnique({ where: { id } });
+
+    if (!file) {
+      return res.status(404).json({
+        success: false,
+        message: 'File not found'
+      });
+    }
+
+    const uploadDir = process.env.UPLOAD_DIR || './uploads';
+    const filePath = path.join(uploadDir, file.url);
+
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({
+        success: false,
+        message: 'File not found on server'
+      });
+    }
+
+    res.download(filePath, file.filename);
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function deleteFile(req, res, next) {
+  try {
+    const id = Number(req.params.id);
+
+    if (Number.isNaN(id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid file id'
+      });
+    }
+
+    const file = await prisma.file.findUnique({ where: { id } });
+
+    if (!file) {
+      return res.status(404).json({
+        success: false,
+        message: 'File not found'
+      });
+    }
+
+    const uploadDir = process.env.UPLOAD_DIR || './uploads';
+    const filePath = path.join(uploadDir, file.url);
+
+    // Delete physical file if exists
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+
+    // Delete database record
+    await prisma.file.delete({ where: { id } });
+
+    res.json({
+      success: true,
+      message: 'File deleted successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+module.exports = {
+  uploadFile,
+  getBusinessFiles,
+  downloadFile,
+  deleteFile
 };

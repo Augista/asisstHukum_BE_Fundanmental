@@ -1,13 +1,40 @@
-import { Router } from "express";
-import { uploadFile, getMyFiles, downloadFile, deleteFile } from "../controllers/file.controller.js";
-import { auth } from "../middlewares/auth.middleware.js";
-import { upload } from "../middlewares/upload.js";
+const express = require('express');
+const router = express.Router();
 
-const router = Router();
+const fileCtrl = require('../controllers/file.controller');
+const { authenticate, authorizeRole } = require('../middleware/auth');
+const { upload } = require('../services/storage');
 
-router.post("/upload", auth, upload.single("file"), uploadFile);
-router.get("/my", auth, getMyFiles);
-router.get("/:id", auth, downloadFile);
-router.delete("/:id", auth, deleteFile);
+// Upload file for business
+router.post(
+  '/business/:businessId/files',
+  authenticate,
+  authorizeRole(['OWNER', 'ADMIN']),
+  upload.single('file'),
+  fileCtrl.uploadFile
+);
 
-export default router;
+// Get files for a business
+router.get(
+  '/business/:businessId/files',
+  authenticate,
+  authorizeRole(['OWNER', 'ADMIN', 'LAWYER']),
+  fileCtrl.getBusinessFiles
+);
+
+// Download specific file
+router.get(
+  '/files/:id/download',
+  authenticate,
+  fileCtrl.downloadFile
+);
+
+// Delete file
+router.delete(
+  '/files/:id',
+  authenticate,
+  authorizeRole(['OWNER', 'ADMIN']),
+  fileCtrl.deleteFile
+);
+
+module.exports = router;
