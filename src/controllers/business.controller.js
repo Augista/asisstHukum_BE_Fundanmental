@@ -1,18 +1,10 @@
 const prisma = require('../utils/prismaClient');
+const { successResponse, errorResponse } = require('../utils/response');
 
-// Create new business (OWNER only)
 async function createBusiness(req, res, next) {
     try {
         const { name, nib } = req.body;
 
-        if (!name) {
-            return res.status(400).json({
-                success: false,
-                message: 'Business name is required'
-            });
-        }
-
-        // Owner creates business for themselves
         const business = await prisma.business.create({
             data: {
                 name,
@@ -26,17 +18,12 @@ async function createBusiness(req, res, next) {
             }
         });
 
-        res.status(201).json({
-            success: true,
-            message: 'Business created successfully',
-            data: business
-        });
+        return successResponse(res, 201, 'Business created successfully', business);
     } catch (error) {
         next(error);
     }
 }
 
-// Get businesses owned by current user
 async function getMyBusinesses(req, res, next) {
     try {
         const businesses = await prisma.business.findMany({
@@ -69,27 +56,19 @@ async function getMyBusinesses(req, res, next) {
             orderBy: { createdAt: 'desc' }
         });
 
-        return res.json({
-            success: true,
-            message: "My businesses fetched successfully",
-            data: businesses
-        });
+        return successResponse(res, 200, 'My businesses fetched successfully', businesses);
     } catch (error) {
         next(error);
     }
 }
 
 
-// Get single business by ID
 async function getBusiness(req, res, next) {
     try {
         const id = Number(req.params.id);
 
         if (Number.isNaN(id)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid business id'
-            });
+            return errorResponse(res, 400, 'Invalid business id', 'INVALID_ID');
         }
 
         const business = await prisma.business.findUnique({
@@ -118,28 +97,17 @@ async function getBusiness(req, res, next) {
         });
 
         if (!business) {
-            return res.status(404).json({
-                success: false,
-                message: 'Business not found'
-            });
+            return errorResponse(res, 404, 'Business not found', 'NOT_FOUND');
         }
 
-        // Authorization check
         if (
             req.user.role === 'OWNER' &&
             business.ownerId !== req.user.id
         ) {
-            return res.status(403).json({
-                success: false,
-                message: "Forbidden"
-            });
+            return errorResponse(res, 403, 'Forbidden', 'FORBIDDEN');
         }
 
-        return res.json({
-            success: true,
-            message: "Business detail fetched successfully",
-            data: business
-        });
+        return successResponse(res, 200, 'Business detail fetched successfully', business);
 
     } catch (error) {
         next(error);
@@ -147,37 +115,25 @@ async function getBusiness(req, res, next) {
 }
 
 
-// Update business (OWNER of the business can update)
 async function updateBusiness(req, res, next) {
     try {
         const id = Number(req.params.id);
 
         if (Number.isNaN(id)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid business id'
-            });
+            return errorResponse(res, 400, 'Invalid business id', 'INVALID_ID');
         }
         const { name, nib } = req.body;
 
-        // Check if business exists and user owns it
         const business = await prisma.business.findUnique({ where: { id } });
 
         if (!business) {
-            return res.status(404).json({
-                success: false,
-                message: 'Business not found'
-            });
+            return errorResponse(res, 404, 'Business not found', 'NOT_FOUND');
         }
 
         if (business.ownerId !== req.user.id) {
-            return res.status(403).json({
-                success: false,
-                message: 'Forbidden - You can only update your own business'
-            });
+            return errorResponse(res, 403, 'You can only update your own business', 'FORBIDDEN');
         }
 
-        // Update only provided fields
         const data = {};
         if (name !== undefined) data.name = name;
         if (nib !== undefined) data.nib = nib;
@@ -195,41 +151,28 @@ async function updateBusiness(req, res, next) {
             }
         });
 
-        res.json({
-            success: true,
-            message: 'Business updated successfully',
-            data: updated
-        });
+        return successResponse(res, 200, 'Business updated successfully', updated);
     } catch (error) {
         next(error);
     }
 }
 
-// Delete business (ADMIN only)
 async function deleteBusiness(req, res, next) {
     try {
         const id = Number(req.params.id);
 
         if (Number.isNaN(id)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid business id'
-            });
+            return errorResponse(res, 400, 'Invalid business id', 'INVALID_ID');
         }
 
-        // Only admin can delete (checked by route middleware)
         await prisma.business.delete({ where: { id } });
 
-        res.json({
-            success: true,
-            message: 'Business deleted successfully'
-        });
+        return successResponse(res, 200, 'Business deleted successfully');
     } catch (error) {
         next(error);
     }
 }
 
-// Assign business to owner or lawyer (ADMIN only)
 async function assignBusiness(req, res, next) {
     try {
         const id = Number(req.params.id);
@@ -252,43 +195,28 @@ async function assignBusiness(req, res, next) {
             }
         });
 
-        res.json({
-            success: true,
-            message: 'Business assignment updated successfully',
-            data: business
-        });
+        return successResponse(res, 200, 'Business assignment updated successfully', business);
     } catch (error) {
         next(error);
     }
 }
 
-// Upload permit for business
 async function uploadPermit(req, res, next) {
     try {
-        const businessId = Number(req.params.id); // business id
+        const businessId = Number(req.params.id);
 
         if (!req.file) {
-            return res.status(400).json({
-                success: false,
-                message: 'No file uploaded'
-            });
+            return errorResponse(res, 400, 'No file uploaded', 'NO_FILE');
         }
 
         const business = await prisma.business.findUnique({ where: { id: businessId } });
 
         if (!business) {
-            return res.status(404).json({
-                success: false,
-                message: 'Business not found'
-            });
+            return errorResponse(res, 404, 'Business not found', 'NOT_FOUND');
         }
 
-        // Owner can only upload for their business, admin can upload for any
         if (req.user.role === 'OWNER' && business.ownerId !== req.user.id) {
-            return res.status(403).json({
-                success: false,
-                message: 'Forbidden'
-            });
+            return errorResponse(res, 403, 'Forbidden', 'FORBIDDEN');
         }
 
         const permit = await prisma.permit.create({
@@ -298,60 +226,41 @@ async function uploadPermit(req, res, next) {
             }
         });
 
-        res.status(201).json({
-            success: true,
-            message: 'Permit uploaded successfully',
-            data: permit
-        });
+        return successResponse(res, 201, 'Permit uploaded successfully', permit);
     } catch (error) {
         next(error);
     }
 }
 
-// Remove permit from business
 async function removePermit(req, res, next) {
     try {
         const businessId = Number(req.params.businessId);
         const permitId = Number(req.params.permitId);
 
         if (Number.isNaN(businessId) || Number.isNaN(permitId)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid businessId or permitId'
-            });
+            return errorResponse(res, 400, 'Invalid businessId or permitId', 'INVALID_ID');
         }
 
         const permit = await prisma.permit.findUnique({ where: { id: permitId } });
 
         if (!permit || permit.businessId !== businessId) {
-            return res.status(404).json({
-                success: false,
-                message: 'Permit not found'
-            });
+            return errorResponse(res, 404, 'Permit not found', 'NOT_FOUND');
         }
 
-        // Check business ownership
         const business = await prisma.business.findUnique({ where: { id: businessId } });
 
         if (req.user.role === 'OWNER' && business.ownerId !== req.user.id) {
-            return res.status(403).json({
-                success: false,
-                message: 'Forbidden'
-            });
+            return errorResponse(res, 403, 'Forbidden', 'FORBIDDEN');
         }
 
         await prisma.permit.delete({ where: { id: permitId } });
 
-        res.json({
-            success: true,
-            message: 'Permit deleted successfully'
-        });
+        return successResponse(res, 200, 'Permit deleted successfully');
     } catch (error) {
         next(error);
     }
 }
 
-// List all businesses (ADMIN only)
 async function listAllBusinesses(req, res, next) {
     try {
         const businesses = await prisma.business.findMany({
@@ -367,11 +276,7 @@ async function listAllBusinesses(req, res, next) {
             orderBy: { createdAt: 'desc' }
         });
 
-        res.json({
-            success: true,
-            message: 'All businesses fetched successfully',
-            data: businesses
-        });
+        return successResponse(res, 200, 'All businesses fetched successfully', businesses);
     } catch (error) {
         next(error);
     }

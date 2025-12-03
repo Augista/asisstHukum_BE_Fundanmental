@@ -1,49 +1,52 @@
 const jwt = require('jsonwebtoken');
+const { errorResponse } = require('../utils/response');
 
-// Authentication middleware
 function authenticate(req, res, next) {
   const authHeader = req.headers.authorization || req.headers.Authorization;
 
   if (!authHeader?.startsWith('Bearer ')) {
-    return res.status(401).json({ message: 'Unauthorized - No token provided' });
+    return errorResponse(res, 401, 'No token provided', 'NO_TOKEN');
   }
 
   const token = authHeader.split(' ')[1];
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded; // Contains: id, email, role
+    req.user = decoded;
     next();
   } catch (err) {
-    return res.status(401).json({ message: 'Invalid or expired token' });
+    if (err.name === 'TokenExpiredError') {
+      return errorResponse(res, 401, 'Token has expired', 'TOKEN_EXPIRED');
+    }
+    if (err.name === 'JsonWebTokenError') {
+      return errorResponse(res, 401, 'Invalid token', 'INVALID_TOKEN');
+    }
+    return errorResponse(res, 401, 'Authentication failed', 'AUTH_FAILED');
   }
 }
 
-// Role-based authorization middleware factory
 function authorizeRole(allowedRoles) {
   return (req, res, next) => {
     if (!req.user) {
-      return res.status(401).json({ message: 'Unauthorized' });
+      return errorResponse(res, 401, 'Unauthorized', 'UNAUTHORIZED');
     }
 
-    // Convert allowedRoles to array if string
     const roles = Array.isArray(allowedRoles) ? allowedRoles : [allowedRoles];
 
-    // Convert to uppercase for case-insensitive comparison
     const userRole = req.user.role.toUpperCase();
     const normalizedRoles = roles.map(role => role.toUpperCase());
 
     if (!normalizedRoles.includes(userRole)) {
-      return res.status(403).json({ message: 'Forbidden - Insufficient permissions' });
+      return errorResponse(res, 403, 'Insufficient permissions', 'FORBIDDEN');
     }
 
     next();
   };
 }
 
-// Export both middleware functions
 module.exports = {
   authenticate,
-  authMiddleware: authenticate, // Alias for backward compatibility
+  authMiddleware: authenticate,
   authorizeRole
 };
+

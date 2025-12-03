@@ -4,9 +4,14 @@ const router = express.Router();
 const consultCtrl = require('../controllers/consultation.controller');
 const { authenticate, authorizeRole } = require('../middleware/auth');
 const { validate } = require('../middleware/validate');
-const { consultationSchema } = require('../validation/schema');
+const {
+  consultationSchema,
+  consultationAssignSchema,
+  consultationStatusSchema,
+  consultationResultSchema
+} = require('../validation/schema');
+const { upload } = require('../services/storage');
 
-// Owner creates consultation request
 router.post(
   '/',
   authenticate,
@@ -15,7 +20,6 @@ router.post(
   consultCtrl.createConsultation
 );
 
-// Admin: list all
 router.get(
   '/admin',
   authenticate,
@@ -23,7 +27,6 @@ router.get(
   consultCtrl.listAllConsultations
 );
 
-// Lawyer: list only assigned consultations
 router.get(
   '/lawyer',
   authenticate,
@@ -31,7 +34,22 @@ router.get(
   consultCtrl.listLawyerConsultations
 );
 
-// Owner: list consultations for their business
+router.patch(
+  '/:id/result',
+  authenticate,
+  authorizeRole(['lawyer']),
+   validate(consultationResultSchema),
+  consultCtrl.submitResult
+);
+
+router.post(
+  '/:id/result-file',
+  authenticate,
+  authorizeRole(['lawyer']),
+  upload.single('file'),
+  consultCtrl.uploadResultFile
+);
+
 router.get(
   '/my',
   authenticate,
@@ -39,19 +57,19 @@ router.get(
   consultCtrl.listMyConsultations
 );
 
-// Admin assign consultation → Lawyer
 router.patch(
   '/:id/assign',
   authenticate,
   authorizeRole(['admin']),
+  validate(consultationAssignSchema),
   consultCtrl.assignLawyer
 );
 
-// Lawyer or Admin set status (approve/reject)
 router.patch(
   '/:id/status',
   authenticate,
   authorizeRole(['lawyer', 'admin']),
+  validate(consultationStatusSchema),
   consultCtrl.updateStatus
 );
 

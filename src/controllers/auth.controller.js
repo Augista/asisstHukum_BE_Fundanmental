@@ -1,47 +1,25 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const prisma = require('../utils/prismaClient');
+const { successResponse, errorResponse } = require('../utils/response');
 
-// Register new user
 async function register(req, res, next) {
     try {
         const { name, email, password } = req.body;
 
-        // Validation
-        if (!name || !email || !password) {
-            return res.status(400).json({
-                success: false,
-                message: 'Name, email, and password are required'
-            });
-        }
-
-        // Password validation - minimum 6 characters
-        if (password.length < 6) {
-            return res.status(400).json({
-                success: false,
-                message: 'Password must be at least 6 characters long'
-            });
-        }
-
-        // Check if user already exists
         const existingUser = await prisma.user.findUnique({ where: { email } });
         if (existingUser) {
-            return res.status(400).json({
-                success: false,
-                message: 'Email already registered'
-            });
+            return errorResponse(res, 400, 'Email already registered', 'EMAIL_EXISTS');
         }
 
-        // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Create user with default role OWNER
         const user = await prisma.user.create({
             data: {
                 name,
                 email,
                 password: hashedPassword,
-                role: 'OWNER' // Default role, only admin can change this
+                role: 'OWNER'
             },
             select: {
                 id: true,
@@ -52,21 +30,7 @@ async function register(req, res, next) {
             }
         });
 
-        // Generate token
-        const token = jwt.sign(
-            {
-                id: user.id,
-                email: user.email,
-                role: user.role
-            },
-            process.env.JWT_SECRET,
-            { expiresIn: '8h' }
-        );
-
-        return res.status(201).json({
-            success: true,
-            message: 'Registration successful',
-            token,
+        return successResponse(res, 201, 'Registration successful', {
             user
         });
 
@@ -75,38 +39,20 @@ async function register(req, res, next) {
     }
 }
 
-// Login user
 async function login(req, res, next) {
     try {
         const { email, password } = req.body;
 
-        // Validation
-        if (!email || !password) {
-            return res.status(400).json({
-                success: false,
-                message: 'Email and password are required'
-            });
-        }
-
-        // Find user
         const user = await prisma.user.findUnique({ where: { email } });
         if (!user) {
-            return res.status(401).json({
-                success: false,
-                message: 'Invalid credentials'
-            });
+            return errorResponse(res, 401, 'Invalid email or password', 'INVALID_CREDENTIALS');
         }
 
-        // Verify password
         const isValidPassword = await bcrypt.compare(password, user.password);
         if (!isValidPassword) {
-            return res.status(401).json({
-                success: false,
-                message: 'Invalid credentials'
-            });
+            return errorResponse(res, 401, 'Invalid email or password', 'INVALID_CREDENTIALS');
         }
 
-        // Generate token with role
         const token = jwt.sign(
             {
                 id: user.id,
@@ -117,9 +63,7 @@ async function login(req, res, next) {
             { expiresIn: '8h' }
         );
 
-        res.json({
-            success: true,
-            message: 'Login successful',
+        return successResponse(res, 200, 'Login successful', {
             token,
             user: {
                 id: user.id,

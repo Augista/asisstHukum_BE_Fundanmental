@@ -1,23 +1,18 @@
 const prisma = require('../utils/prismaClient');
 const path = require('path');
 const fs = require('fs');
+const { successResponse, errorResponse } = require('../utils/response');
 
 async function uploadFile(req, res, next) {
   try {
     if (!req.file) {
-      return res.status(400).json({
-        success: false,
-        message: 'No file uploaded'
-      });
+      return errorResponse(res, 400, 'No file uploaded', 'NO_FILE');
     }
 
     const businessId = Number(req.params.businessId || req.body.businessId);
 
     if (Number.isNaN(businessId)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid businessId'
-      });
+      return errorResponse(res, 400, 'Invalid businessId', 'INVALID_ID');
     }
 
     const file = await prisma.file.create({
@@ -28,11 +23,7 @@ async function uploadFile(req, res, next) {
       }
     });
 
-    res.status(201).json({
-      success: true,
-      message: 'File uploaded successfully',
-      data: file
-    });
+    return successResponse(res, 201, 'File uploaded successfully', file);
   } catch (error) {
     next(error);
   }
@@ -43,10 +34,7 @@ async function getBusinessFiles(req, res, next) {
     const businessId = Number(req.params.businessId);
 
     if (Number.isNaN(businessId)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid businessId'
-      });
+      return errorResponse(res, 400, 'Invalid businessId', 'INVALID_ID');
     }
 
     const files = await prisma.file.findMany({
@@ -54,11 +42,7 @@ async function getBusinessFiles(req, res, next) {
       orderBy: { createdAt: 'desc' }
     });
 
-    res.json({
-      success: true,
-      message: 'Files fetched successfully',
-      data: files
-    });
+    return successResponse(res, 200, 'Files fetched successfully', files);
   } catch (error) {
     next(error);
   }
@@ -69,29 +53,20 @@ async function downloadFile(req, res, next) {
     const id = Number(req.params.id);
 
     if (Number.isNaN(id)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid file id'
-      });
+      return errorResponse(res, 400, 'Invalid file id', 'INVALID_ID');
     }
 
     const file = await prisma.file.findUnique({ where: { id } });
 
     if (!file) {
-      return res.status(404).json({
-        success: false,
-        message: 'File not found'
-      });
+      return errorResponse(res, 404, 'File not found', 'NOT_FOUND');
     }
 
     const uploadDir = process.env.UPLOAD_DIR || './uploads';
     const filePath = path.join(uploadDir, file.url);
 
     if (!fs.existsSync(filePath)) {
-      return res.status(404).json({
-        success: false,
-        message: 'File not found on server'
-      });
+      return errorResponse(res, 404, 'File not found on server', 'FILE_NOT_FOUND');
     }
 
     res.download(filePath, file.filename);
@@ -105,36 +80,25 @@ async function deleteFile(req, res, next) {
     const id = Number(req.params.id);
 
     if (Number.isNaN(id)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid file id'
-      });
+      return errorResponse(res, 400, 'Invalid file id', 'INVALID_ID');
     }
 
     const file = await prisma.file.findUnique({ where: { id } });
 
     if (!file) {
-      return res.status(404).json({
-        success: false,
-        message: 'File not found'
-      });
+      return errorResponse(res, 404, 'File not found', 'NOT_FOUND');
     }
 
     const uploadDir = process.env.UPLOAD_DIR || './uploads';
     const filePath = path.join(uploadDir, file.url);
 
-    // Delete physical file if exists
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
     }
 
-    // Delete database record
     await prisma.file.delete({ where: { id } });
 
-    res.json({
-      success: true,
-      message: 'File deleted successfully'
-    });
+    return successResponse(res, 200, 'File deleted successfully');
   } catch (error) {
     next(error);
   }

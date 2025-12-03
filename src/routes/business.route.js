@@ -4,7 +4,11 @@ const router = express.Router();
 const businessCtrl = require('../controllers/business.controller');
 const { authenticate, authorizeRole } = require('../middleware/auth');
 const { validate } = require('../middleware/validate');
-const { businessSchema, businessUpdateSchema } = require('../validation/schema');
+const {
+  businessSchema,
+  businessUpdateSchema,
+  businessAssignSchema
+} = require('../validation/schema');
 const { upload } = require('../services/storage');
 
 // Owner: get their own businesses (MUST be before :id!)
@@ -61,7 +65,8 @@ router.delete(
 router.patch(
   '/:id/assign',
   authenticate,
-  authorizeRole(['admin']), // fix role consistency!
+  authorizeRole(['admin']),
+  validate(businessAssignSchema),
   businessCtrl.assignBusiness
 );
 

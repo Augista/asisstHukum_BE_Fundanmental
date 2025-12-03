@@ -14,9 +14,11 @@ const storage = multer.diskStorage({
   }
 });
 
+const maxFileSize = parseInt(process.env.MAX_FILE_SIZE) || 50 * 1024 * 1024; // default 50MB
+
 const upload = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // max cuma 5MB
+  limits: { fileSize: maxFileSize },
   fileFilter: (req, file, cb) => {
     const allowed = ['.pdf', '.jpg', '.jpeg', '.png'];
     if (allowed.includes(path.extname(file.originalname).toLowerCase())) cb(null, true);

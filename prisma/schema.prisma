@@ -49,15 +49,6 @@ model Permit {
   createdAt  DateTime  @default(now())
 }
 
-model File {
-  id         Int       @id @default(autoincrement())
-  businessId Int
-  business   Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  filename   String
-  url        String
-  createdAt  DateTime  @default(now())
-}
-
 model Consultation {
   id         Int       @id @default(autoincrement())
   businessId Int
@@ -66,8 +57,21 @@ model Consultation {
   lawyer     User?     @relation(fields: [lawyerId], references: [id], onDelete: SetNull)
   status     ConsultationStatus @default(PENDING)
   notes      String?
+  resultFileId Int? @unique
+  resultFile   File?   @relation("ConsultationResultFile", fields: [resultFileId], references: [id])
+
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
+}
+
+model File {
+  id           Int             @id @default(autoincrement())
+  businessId   Int
+  business     Business        @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  filename     String
+  url          String
+  createdAt    DateTime        @default(now())
+  consultation Consultation?   @relation("ConsultationResultFile")
 }
 
 enum ConsultationStatus {

@@ -1,14 +1,28 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const { PrismaClient } = require('@prisma/client');
 const path = require('path');
+const { sanitizeMiddleware, mongoSanitize } = require('./middleware/sanitize');
 
 dotenv.config();
 const prisma = new PrismaClient();
 const app = express();
 
-// CORS configuration
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "https:"],
+    },
+  },
+  crossOriginEmbedderPolicy: false
+}));
+
 const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:3001,http://localhost:3000')
   .split(',')
   .map(o => o.trim());
@@ -16,7 +30,6 @@ const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:3001,http:
 app.use(
   cors({
     origin: (origin, callback) => {
-      // allow requests with no origin (like mobile apps, Postman)
       if (!origin) return callback(null, true);
       if (allowedOrigins.includes(origin)) return callback(null, true);
       return callback(new Error('Not allowed by CORS'));
@@ -27,21 +40,42 @@ app.use(
   })
 );
 
-app.use(express.json());
+const maxBodySize = process.env.MAX_FILE_SIZE || '50mb';
 
-// Static files
+app.use(express.json({ limit: maxBodySize }));
+app.use(express.urlencoded({ extended: true, limit: maxBodySize }));
+
+app.use(mongoSanitize());
+app.use(sanitizeMiddleware);
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.use('/api', limiter);
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: 'Too many login attempts, please try again after 15 minutes.',
+  skipSuccessfulRequests: true,
+});
+
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
+
 app.use(express.static(path.join(__dirname, "..", "public")));
 
-// Import routers and middleware
 const apiRouter = require('./routes/route');
 const errorHandler = require('./middleware/errorHandler');
 
 
-
-// Mount API routes
 app.use('/api', apiRouter);
 
-// HTML routes
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "..", "public", "login.html"));
 });
@@ -50,10 +84,8 @@ app.get("/dashboard.html", (req, res) => {
   res.sendFile(path.join(__dirname, "..", "public", "dashboard.html"));
 });
 
-// Error handler middleware (must be after all routes)
 app.use(errorHandler);
 
-// Catch-all route for SPA
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "..", "public", "login.html"));
 });

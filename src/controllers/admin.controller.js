@@ -1,11 +1,16 @@
 const prisma = require('../utils/prismaClient');
+const { successResponse, errorResponse } = require('../utils/response');
 
 async function assignUserToLawyer(req, res, next) {
     try {
-        const { userId } = req.params;
+        const userId = Number(req.params.userId);
+
+        if (Number.isNaN(userId)) {
+            return errorResponse(res, 400, 'Invalid user id', 'INVALID_ID');
+        }
 
         const user = await prisma.user.update({
-            where: { id: Number(userId) },
+            where: { id: userId },
             data: {
                 role: 'LAWYER'
             },
@@ -17,11 +22,7 @@ async function assignUserToLawyer(req, res, next) {
             }
         });
 
-        return res.json({
-            success: true,
-            message: 'User assigned as Lawyer successfully',
-            data: user
-        });
+        return successResponse(res, 200, 'User assigned as Lawyer successfully', user);
     } catch (error) {
         next(error);
     }
