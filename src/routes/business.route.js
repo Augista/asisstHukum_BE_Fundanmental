@@ -7,6 +7,22 @@ const { validate } = require('../middleware/validate');
 const { businessSchema, businessUpdateSchema } = require('../validation/schema');
 const { upload } = require('../services/storage');
 
+// Owner: get their own businesses (MUST be before :id!)
+router.get(
+  '/my',
+  authenticate,
+  authorizeRole(['owner']),
+  businessCtrl.getMyBusinesses
+);
+
+// Admin: list all businesses (MUST be before :id!)
+router.get(
+  '/all',
+  authenticate,
+  authorizeRole(['admin']),
+  businessCtrl.listAllBusinesses
+);
+
 // Owner creates business
 router.post(
   '/',
@@ -45,7 +61,7 @@ router.delete(
 router.patch(
   '/:id/assign',
   authenticate,
-  authorizeRole(['admin']),
+  authorizeRole(['admin']), // fix role consistency!
   businessCtrl.assignBusiness
 );
 
@@ -66,22 +82,4 @@ router.delete(
   businessCtrl.removePermit
 );
 
-// Owner: get their own businesses
-router.get(
-  '/my',
-  authenticate,
-  authorizeRole(['OWNER']),
-  businessCtrl.getMyBusinesses
-);
-
-// Admin: list all businesses
-router.get(
-  '/all',
-  authenticate,
-  authorizeRole(['ADMIN']),
-  businessCtrl.listAllBusinesses
-);
-
 module.exports = router;
-
-

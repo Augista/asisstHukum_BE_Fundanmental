@@ -43,25 +43,42 @@ async function getMyBusinesses(req, res, next) {
             where: { ownerId: req.user.id },
             include: {
                 owner: {
-                    select: { id: true, name: true, email: true }
+                    select: { id: true, name: true, email: true, role: true }
                 },
                 lawyer: {
-                    select: { id: true, name: true, email: true }
+                    select: { id: true, name: true, email: true, role: true }
                 },
-                permits: true
+                permits: {
+                    select: { id: true, filename: true, createdAt: true }
+                },
+                files: {
+                    select: { id: true, filename: true, url: true, createdAt: true }
+                },
+                consultations: {
+                    select: {
+                        id: true,
+                        status: true,
+                        notes: true,
+                        createdAt: true,
+                        lawyer: {
+                            select: { id: true, name: true, email: true }
+                        }
+                    }
+                }
             },
             orderBy: { createdAt: 'desc' }
         });
 
-        res.json({
+        return res.json({
             success: true,
-            message: 'My businesses fetched successfully',
+            message: "My businesses fetched successfully",
             data: businesses
         });
     } catch (error) {
         next(error);
     }
 }
+
 
 // Get single business by ID
 async function getBusiness(req, res, next) {
@@ -84,7 +101,12 @@ async function getBusiness(req, res, next) {
                 lawyer: {
                     select: { id: true, name: true, email: true, role: true }
                 },
-                permits: true,
+                permits: {
+                    select: { id: true, filename: true, createdAt: true }
+                },
+                files: {
+                    select: { id: true, filename: true, url: true, createdAt: true }
+                },
                 consultations: {
                     include: {
                         lawyer: {
@@ -102,23 +124,28 @@ async function getBusiness(req, res, next) {
             });
         }
 
-        // Check authorization - owner can view their business, admin can view any
-        if (req.user.role === 'OWNER' && business.ownerId !== req.user.id) {
+        // Authorization check
+        if (
+            req.user.role === 'OWNER' &&
+            business.ownerId !== req.user.id
+        ) {
             return res.status(403).json({
                 success: false,
-                message: 'Forbidden'
+                message: "Forbidden"
             });
         }
 
-        res.json({
+        return res.json({
             success: true,
-            message: 'Business detail fetched successfully',
+            message: "Business detail fetched successfully",
             data: business
         });
+
     } catch (error) {
         next(error);
     }
 }
+
 
 // Update business (OWNER of the business can update)
 async function updateBusiness(req, res, next) {

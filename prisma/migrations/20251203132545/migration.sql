@@ -1,40 +1,28 @@
-/*
-  Warnings:
-
-  - The primary key for the `User` table will be changed. If it partially fails, the table could be left without primary key constraint.
-  - You are about to drop the `Post` table. If the table is not empty, all the data it contains will be lost.
-  - Added the required column `password` to the `User` table without a default value. This is not possible if the table is not empty.
-  - Added the required column `updatedAt` to the `User` table without a default value. This is not possible if the table is not empty.
-
-*/
 -- CreateEnum
 CREATE TYPE "Role" AS ENUM ('OWNER', 'LAWYER', 'ADMIN');
 
 -- CreateEnum
 CREATE TYPE "ConsultationStatus" AS ENUM ('PENDING', 'APPROVED', 'REJECTED');
 
--- DropForeignKey
-ALTER TABLE "Post" DROP CONSTRAINT "Post_userId_fkey";
+-- CreateTable
+CREATE TABLE "User" (
+    "id" SERIAL NOT NULL,
+    "email" TEXT NOT NULL,
+    "password" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "role" "Role" NOT NULL DEFAULT 'OWNER',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
--- AlterTable
-ALTER TABLE "User" DROP CONSTRAINT "User_pkey",
-ADD COLUMN     "password" TEXT NOT NULL,
-ADD COLUMN     "role" "Role" NOT NULL DEFAULT 'OWNER',
-ADD COLUMN     "updatedAt" TIMESTAMP(3) NOT NULL,
-ALTER COLUMN "id" DROP DEFAULT,
-ALTER COLUMN "id" SET DATA TYPE TEXT,
-ADD CONSTRAINT "User_pkey" PRIMARY KEY ("id");
-DROP SEQUENCE "User_id_seq";
-
--- DropTable
-DROP TABLE "Post";
+    CONSTRAINT "User_pkey" PRIMARY KEY ("id")
+);
 
 -- CreateTable
 CREATE TABLE "Business" (
-    "id" TEXT NOT NULL,
+    "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
-    "ownerId" TEXT,
-    "lawyerId" TEXT,
+    "ownerId" INTEGER,
+    "lawyerId" INTEGER,
     "nib" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -44,8 +32,8 @@ CREATE TABLE "Business" (
 
 -- CreateTable
 CREATE TABLE "Permit" (
-    "id" TEXT NOT NULL,
-    "businessId" TEXT NOT NULL,
+    "id" SERIAL NOT NULL,
+    "businessId" INTEGER NOT NULL,
     "filename" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -54,8 +42,8 @@ CREATE TABLE "Permit" (
 
 -- CreateTable
 CREATE TABLE "File" (
-    "id" TEXT NOT NULL,
-    "businessId" TEXT NOT NULL,
+    "id" SERIAL NOT NULL,
+    "businessId" INTEGER NOT NULL,
     "filename" TEXT NOT NULL,
     "url" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -65,9 +53,9 @@ CREATE TABLE "File" (
 
 -- CreateTable
 CREATE TABLE "Consultation" (
-    "id" TEXT NOT NULL,
-    "businessId" TEXT NOT NULL,
-    "lawyerId" TEXT,
+    "id" SERIAL NOT NULL,
+    "businessId" INTEGER NOT NULL,
+    "lawyerId" INTEGER,
     "status" "ConsultationStatus" NOT NULL DEFAULT 'PENDING',
     "notes" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -75,6 +63,9 @@ CREATE TABLE "Consultation" (
 
     CONSTRAINT "Consultation_pkey" PRIMARY KEY ("id")
 );
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Business_nib_key" ON "Business"("nib");
