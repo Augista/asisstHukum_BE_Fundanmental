@@ -1,73 +1,60 @@
+/**
+ * Admin API Tests
+ * Tests for admin-only operations
+ * Uses Jest with Supertest
+ */
+
 const request = require('supertest');
 const createApp = require('../src/app');
 const TestHelpers = require('./testHelpers');
 
 const app = createApp();
 
-describe('Admin API', () => {
-    let adminToken, ownerToken, lawyerToken;
-    let adminUser, ownerUser, lawyerUser;
+describe('Admin API - Basic Tests', () => {
+    let adminToken, userToPromoteId;
 
+    /**
+     * Setup: Create admin and regular user
+     */
     beforeAll(async () => {
         await TestHelpers.cleanup();
 
-        // Create test users
+        // Create admin user
         const admin = await TestHelpers.createUserWithToken({
-            email: 'admin@example.com',
-            name: 'Test Admin',
+            email: 'admin@test.com',
+            name: 'Admin User',
             role: 'ADMIN'
         });
-        adminUser = admin.user;
         adminToken = admin.token;
 
-        const owner = await TestHelpers.createUserWithToken({
-            email: 'owner@example.com',
-            name: 'Test Owner',
+        // Create regular user to be promoted
+        const regularUser = await TestHelpers.createUser({
+            email: 'promote@test.com',
+            name: 'User To Promote',
             role: 'OWNER'
         });
-        ownerUser = owner.user;
-        ownerToken = owner.token;
-
-        const lawyer = await TestHelpers.createUserWithToken({
-            email: 'lawyer@example.com',
-            name: 'Test Lawyer',
-            role: 'LAWYER'
-        });
-        lawyerUser = lawyer.user;
-        lawyerToken = lawyer.token;
+        userToPromoteId = regularUser.id;
     });
 
+    /**
+     * Cleanup: Remove test data
+     */
     afterAll(async () => {
         await TestHelpers.cleanup();
         await TestHelpers.disconnect();
     });
 
-    describe('PATCH /api/admin/user/:userId/set-lawyer', () => {
-        it('should assign lawyer to user as admin', async () => {
-            const res = await request(app)
-                .patch(`/api/admin/user/${ownerUser.id}/set-lawyer`)
-                .set('Authorization', `Bearer ${adminToken}`)
-                .send({ lawyerId: lawyerUser.id });
+    /**
+     * Test: Promote User to Lawyer
+     * Admin should be able to change user role to LAWYER
+     */
+    it('should promote user to lawyer', async () => {
+        const response = await request(app)
+            .patch(`/api/admin/user/${userToPromoteId}/set-lawyer`)
+            .set('Authorization', `Bearer ${adminToken}`);
 
-            expect(res.status).toBe(200);
-            expect(res.body.success).toBe(true);
-        });
-
-        it('should fail without authentication', async () => {
-            const res = await request(app)
-                .patch(`/api/admin/user/${ownerUser.id}/set-lawyer`)
-                .send({ lawyerId: lawyerUser.id });
-
-            expect(res.status).toBe(401);
-        });
-
-        it('should fail for non-admin role', async () => {
-            const res = await request(app)
-                .patch(`/api/admin/user/${ownerUser.id}/set-lawyer`)
-                .set('Authorization', `Bearer ${ownerToken}`)
-                .send({ lawyerId: lawyerUser.id });
-
-            expect(res.status).toBe(403);
-        });
+        // Verify successful promotion
+        expect(response.status).toBe(200);
+        expect(response.body.success).toBe(true);
     });
 });

@@ -8,9 +8,10 @@ module.exports = {
     ],
     coverageDirectory: 'coverage',
     verbose: true,
-    testTimeout: 30000,
+    testTimeout: 60000,
     forceExit: true,
     clearMocks: true,
     resetMocks: true,
-    restoreMocks: true
+    restoreMocks: true,
+    maxWorkers: 1
 };

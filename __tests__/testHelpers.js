@@ -3,15 +3,22 @@ const jwt = require('jsonwebtoken');
 const prisma = require('../src/utils/prismaClient');
 
 /**
- * Test utilities for setting up test data and authentication
+ * Test Helper Utilities
+ * Provides functions to create test data and manage test database
  */
-
 class TestHelpers {
     /**
-     * Create a test user with specified role
+     * Create a test user in database
+     * @param {Object} userData - User data
+     * @param {string} userData.email - User email
+     * @param {string} userData.password - User password (will be hashed)
+     * @param {string} userData.name - User full name
+     * @param {string} userData.role - User role (OWNER, ADMIN, LAWYER)
+     * @returns {Promise<Object>} Created user object
      */
-    static async createUser({ email, password = 'password123', name = 'Test User', role = 'owner' }) {
+    static async createUser({ email, password = 'password123', name = 'Test User', role = 'OWNER' }) {
         const hashedPassword = await bcrypt.hash(password, 10);
+
         return await prisma.user.create({
             data: {
                 email,
@@ -23,9 +30,13 @@ class TestHelpers {
     }
 
     /**
-     * Generate JWT token for a user
+     * Generate JWT token for authentication
+     * @param {number} userId - User ID
+     * @param {string} email - User email
+     * @param {string} role - User role
+     * @returns {string} JWT token
      */
-    static generateToken(userId, email, role = 'owner') {
+    static generateToken(userId, email, role = 'OWNER') {
         return jwt.sign(
             { id: userId, email, role: role.toUpperCase() },
             process.env.JWT_SECRET || 'your-secret-key',
@@ -34,16 +45,24 @@ class TestHelpers {
     }
 
     /**
-     * Create user and return token
+     * Create user and generate token in one step
+     * @param {Object} userData - User data (same as createUser)
+     * @returns {Promise<Object>} Object with user and token properties
      */
-    static async createUserWithToken({ email, password = 'password123', name = 'Test User', role = 'owner' }) {
+    static async createUserWithToken({ email, password = 'password123', name = 'Test User', role = 'OWNER' }) {
         const user = await this.createUser({ email, password, name, role });
         const token = this.generateToken(user.id, user.email, role);
+
         return { user, token };
     }
 
     /**
      * Create a test business
+     * @param {Object} businessData - Business data
+     * @param {string} businessData.name - Business name
+     * @param {number} businessData.ownerId - Owner user ID
+     * @param {number} [businessData.lawyerId] - Optional lawyer ID
+     * @returns {Promise<Object>} Created business object
      */
     static async createBusiness({ name, ownerId, lawyerId = null }) {
         return await prisma.business.create({
@@ -57,6 +76,12 @@ class TestHelpers {
 
     /**
      * Create a test consultation
+     * @param {Object} consultationData - Consultation data
+     * @param {string} consultationData.notes - Consultation notes
+     * @param {number} consultationData.businessId - Business ID
+     * @param {number} [consultationData.lawyerId] - Optional lawyer ID
+     * @param {string} [consultationData.status] - Consultation status
+     * @returns {Promise<Object>} Created consultation object
      */
     static async createConsultation({ notes, businessId, lawyerId = null, status = 'PENDING' }) {
         return await prisma.consultation.create({
@@ -71,6 +96,7 @@ class TestHelpers {
 
     /**
      * Clean up all test data from database
+     * Call this in beforeEach or afterAll hooks
      */
     static async cleanup() {
         await prisma.file.deleteMany({});
@@ -82,6 +108,7 @@ class TestHelpers {
 
     /**
      * Disconnect Prisma client
+     * Call this in afterAll hook to prevent hanging connections
      */
     static async disconnect() {
         await prisma.$disconnect();
