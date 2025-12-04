@@ -8,7 +8,10 @@
     "create-admin": "node scripts/createAdmin.js",
     "migrate:dev": "npx prisma migrate dev --name init",
     "migrate:deploy": "npx prisma migrate deploy",
-    "prisma:generate": "npx prisma generate"
+    "prisma:generate": "npx prisma generate",
+    "test": "jest --runInBand --detectOpenHandles",
+    "test:watch": "jest --watch --runInBand",
+    "test:coverage": "jest --coverage --runInBand"
   },
   "dependencies": {
     "@prisma/client": "^6.19.0",
@@ -24,7 +27,10 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "cross-env": "^10.1.0",
+    "jest": "^30.2.0",
     "nodemon": "^3.0.0",
-    "prisma": "^6.19.0"
+    "prisma": "^6.19.0",
+    "supertest": "^7.1.4"
   }
 }
