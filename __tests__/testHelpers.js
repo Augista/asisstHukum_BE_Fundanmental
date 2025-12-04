@@ -3,18 +3,18 @@ const jwt = require('jsonwebtoken');
 const prisma = require('../src/utils/prismaClient');
 
 /**
- * Test Helper Utilities
- * Provides functions to create test data and manage test database
+ * Utilitas Helper untuk Testing
+ * Menyediakan fungsi untuk membuat data testing dan mengelola database testing
  */
 class TestHelpers {
     /**
-     * Create a test user in database
-     * @param {Object} userData - User data
-     * @param {string} userData.email - User email
-     * @param {string} userData.password - User password (will be hashed)
-     * @param {string} userData.name - User full name
-     * @param {string} userData.role - User role (OWNER, ADMIN, LAWYER)
-     * @returns {Promise<Object>} Created user object
+     * Membuat user test di database
+     * @param {Object} userData - Data user
+     * @param {string} userData.email - Email user
+     * @param {string} userData.password - Password user (akan di-hash)
+     * @param {string} userData.name - Nama lengkap user
+     * @param {string} userData.role - Role user (OWNER, ADMIN, LAWYER)
+     * @returns {Promise<Object>} Objek user yang dibuat
      */
     static async createUser({ email, password = 'password123', name = 'Test User', role = 'OWNER' }) {
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -30,10 +30,10 @@ class TestHelpers {
     }
 
     /**
-     * Generate JWT token for authentication
-     * @param {number} userId - User ID
-     * @param {string} email - User email
-     * @param {string} role - User role
+     * Generate JWT token untuk autentikasi
+     * @param {number} userId - ID User
+     * @param {string} email - Email user
+     * @param {string} role - Role user
      * @returns {string} JWT token
      */
     static generateToken(userId, email, role = 'OWNER') {
@@ -45,9 +45,9 @@ class TestHelpers {
     }
 
     /**
-     * Create user and generate token in one step
-     * @param {Object} userData - User data (same as createUser)
-     * @returns {Promise<Object>} Object with user and token properties
+     * Membuat user dan generate token dalam satu langkah
+     * @param {Object} userData - Data user (sama seperti createUser)
+     * @returns {Promise<Object>} Objek dengan properti user dan token
      */
     static async createUserWithToken({ email, password = 'password123', name = 'Test User', role = 'OWNER' }) {
         const user = await this.createUser({ email, password, name, role });
@@ -57,12 +57,12 @@ class TestHelpers {
     }
 
     /**
-     * Create a test business
-     * @param {Object} businessData - Business data
-     * @param {string} businessData.name - Business name
-     * @param {number} businessData.ownerId - Owner user ID
-     * @param {number} [businessData.lawyerId] - Optional lawyer ID
-     * @returns {Promise<Object>} Created business object
+     * Membuat business test
+     * @param {Object} businessData - Data business
+     * @param {string} businessData.name - Nama business
+     * @param {number} businessData.ownerId - ID owner user
+     * @param {number} [businessData.lawyerId] - ID lawyer (opsional)
+     * @returns {Promise<Object>} Objek business yang dibuat
      */
     static async createBusiness({ name, ownerId, lawyerId = null }) {
         return await prisma.business.create({
@@ -75,13 +75,13 @@ class TestHelpers {
     }
 
     /**
-     * Create a test consultation
-     * @param {Object} consultationData - Consultation data
-     * @param {string} consultationData.notes - Consultation notes
-     * @param {number} consultationData.businessId - Business ID
-     * @param {number} [consultationData.lawyerId] - Optional lawyer ID
-     * @param {string} [consultationData.status] - Consultation status
-     * @returns {Promise<Object>} Created consultation object
+     * Membuat consultation test
+     * @param {Object} consultationData - Data consultation
+     * @param {string} consultationData.notes - Catatan consultation
+     * @param {number} consultationData.businessId - ID Business
+     * @param {number} [consultationData.lawyerId] - ID lawyer (opsional)
+     * @param {string} [consultationData.status] - Status consultation
+     * @returns {Promise<Object>} Objek consultation yang dibuat
      */
     static async createConsultation({ notes, businessId, lawyerId = null, status = 'PENDING' }) {
         return await prisma.consultation.create({
@@ -95,8 +95,8 @@ class TestHelpers {
     }
 
     /**
-     * Clean up all test data from database
-     * Call this in beforeEach or afterAll hooks
+     * Membersihkan semua data test dari database
+     * Panggil ini di beforeEach atau afterAll hooks
      */
     static async cleanup() {
         await prisma.file.deleteMany({});
@@ -108,7 +108,7 @@ class TestHelpers {
 
     /**
      * Disconnect Prisma client
-     * Call this in afterAll hook to prevent hanging connections
+     * Panggil ini di afterAll hook untuk mencegah koneksi yang menggantung
      */
     static async disconnect() {
         await prisma.$disconnect();

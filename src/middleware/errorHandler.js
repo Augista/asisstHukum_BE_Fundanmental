@@ -2,13 +2,15 @@ const { errorResponse } = require('../utils/response');
 const { AppError } = require('../utils/errors');
 
 function errorHandler(err, req, res, next) {
-  console.error('Error:', {
-    message: err.message,
-    code: err.code,
-    name: err.name,
-    statusCode: err.statusCode,
-    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
-  });
+  if (process.env.NODE_ENV === 'development') {
+    console.error('Error:', {
+      message: err.message,
+      code: err.code,
+      name: err.name,
+      statusCode: err.statusCode,
+      stack: err.stack
+    });
+  }
 
   if (err instanceof AppError) {
     return errorResponse(res, err.statusCode, err.message, err.errorCode);
@@ -44,7 +46,7 @@ function errorHandler(err, req, res, next) {
     return errorResponse(res, 400, 'Invalid data format', 'INVALID_FORMAT');
   }
 
-  return errorResponse(res, 500, 'Internal server error', 'INTERNAL_SERVER_ERROR', 
+  return errorResponse(res, 500, 'Internal server error', 'INTERNAL_SERVER_ERROR',
     process.env.NODE_ENV === 'development' ? err.message : undefined
   );
 }

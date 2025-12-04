@@ -46,7 +46,6 @@ function authorizeRole(allowedRoles) {
 
 module.exports = {
   authenticate,
-  authMiddleware: authenticate,
   authorizeRole
 };
 

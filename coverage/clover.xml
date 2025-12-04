@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1764863638186" clover="3.2.0">
-  <project timestamp="1764863638186" name="All files">
-    <metrics statements="475" coveredstatements="231" conditionals="233" coveredconditionals="50" methods="56" coveredmethods="20" elements="764" coveredelements="301" complexity="0" loc="475" ncloc="475" packages="6" files="21" classes="21"/>
+<coverage generated="1764866047393" clover="3.2.0">
+  <project timestamp="1764866047393" name="All files">
+    <metrics statements="476" coveredstatements="231" conditionals="233" coveredconditionals="50" methods="56" coveredmethods="20" elements="765" coveredelements="301" complexity="0" loc="476" ncloc="476" packages="6" files="21" classes="21"/>
     <package name="controllers">
       <metrics statements="247" coveredstatements="75" conditionals="112" coveredconditionals="16" methods="25" coveredmethods="10"/>
       <file name="admin.controller.js" path="C:\DENTHA_PUNYA\Kuliah\semester_5\backend_dasar\fp\asisstHukum_BE_Fundanmental\src\controllers\admin.controller.js">
@@ -268,7 +268,7 @@
       </file>
     </package>
     <package name="middleware">
-      <metrics statements="97" coveredstatements="48" conditionals="84" coveredconditionals="23" methods="15" coveredmethods="8"/>
+      <metrics statements="98" coveredstatements="48" conditionals="84" coveredconditionals="23" methods="15" coveredmethods="8"/>
       <file name="auth.js" path="C:\DENTHA_PUNYA\Kuliah\semester_5\backend_dasar\fp\asisstHukum_BE_Fundanmental\src\middleware\auth.js">
         <metrics statements="25" coveredstatements="17" conditionals="14" coveredconditionals="5" methods="4" coveredmethods="4"/>
         <line num="1" count="5" type="stmt"/>
@@ -298,38 +298,39 @@
         <line num="47" count="5" type="stmt"/>
       </file>
       <file name="errorHandler.js" path="C:\DENTHA_PUNYA\Kuliah\semester_5\backend_dasar\fp\asisstHukum_BE_Fundanmental\src\middleware\errorHandler.js">
-        <metrics statements="31" coveredstatements="3" conditionals="40" coveredconditionals="0" methods="4" coveredmethods="0"/>
+        <metrics statements="32" coveredstatements="3" conditionals="40" coveredconditionals="0" methods="4" coveredmethods="0"/>
         <line num="1" count="5" type="stmt"/>
         <line num="2" count="5" type="stmt"/>
-        <line num="5" count="0" type="stmt"/>
-        <line num="13" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="14" count="0" type="stmt"/>
-        <line num="17" count="0" type="cond" truecount="0" falsecount="4"/>
-        <line num="18" count="0" type="stmt"/>
-        <line num="21" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="22" count="0" type="stmt"/>
-        <line num="25" count="0" type="cond" truecount="0" falsecount="4"/>
-        <line num="26" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="27" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="5" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="6" count="0" type="stmt"/>
+        <line num="15" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="16" count="0" type="stmt"/>
+        <line num="19" count="0" type="cond" truecount="0" falsecount="4"/>
+        <line num="20" count="0" type="stmt"/>
+        <line num="23" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="24" count="0" type="stmt"/>
+        <line num="27" count="0" type="cond" truecount="0" falsecount="4"/>
         <line num="28" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="31" count="0" type="cond" truecount="0" falsecount="4"/>
-        <line num="32" count="0" type="stmt"/>
-        <line num="35" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="36" count="0" type="stmt"/>
-        <line num="39" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="40" count="0" type="stmt"/>
-        <line num="43" count="0" type="cond" truecount="0" falsecount="4"/>
-        <line num="44" count="0" type="stmt"/>
-        <line num="47" count="0" type="stmt"/>
-        <line num="53" count="0" type="stmt"/>
-        <line num="89" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="95" count="0" type="stmt"/>
-        <line num="99" count="0" type="stmt"/>
-        <line num="109" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="114" count="0" type="stmt"/>
-        <line num="118" count="0" type="stmt"/>
-        <line num="128" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="131" count="5" type="stmt"/>
+        <line num="29" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="30" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="33" count="0" type="cond" truecount="0" falsecount="4"/>
+        <line num="34" count="0" type="stmt"/>
+        <line num="37" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="38" count="0" type="stmt"/>
+        <line num="41" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="42" count="0" type="stmt"/>
+        <line num="45" count="0" type="cond" truecount="0" falsecount="4"/>
+        <line num="46" count="0" type="stmt"/>
+        <line num="49" count="0" type="stmt"/>
+        <line num="55" count="0" type="stmt"/>
+        <line num="91" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="97" count="0" type="stmt"/>
+        <line num="101" count="0" type="stmt"/>
+        <line num="111" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="116" count="0" type="stmt"/>
+        <line num="120" count="0" type="stmt"/>
+        <line num="130" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="133" count="5" type="stmt"/>
       </file>
       <file name="sanitize.js" path="C:\DENTHA_PUNYA\Kuliah\semester_5\backend_dasar\fp\asisstHukum_BE_Fundanmental\src\middleware\sanitize.js">
         <metrics statements="23" coveredstatements="20" conditionals="26" coveredconditionals="18" methods="3" coveredmethods="2"/>
