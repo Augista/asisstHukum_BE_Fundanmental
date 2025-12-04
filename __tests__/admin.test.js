@@ -1,60 +1,97 @@
 /**
- * Admin API Tests
- * Tests for admin-only operations
- * Uses Jest with Supertest
+ * Unit Test untuk Admin Controller
+ * Menggunakan Jest mocking untuk mengisolasi logic dari dependencies
  */
 
-const request = require('supertest');
-const createApp = require('../src/app');
-const TestHelpers = require('./testHelpers');
+const { assignUserToLawyer } = require('../src/controllers/admin.controller');
+const prisma = require('../src/utils/prismaClient');
+const { successResponse, errorResponse } = require('../src/utils/response');
 
-const app = createApp();
+// Mock dependencies
+jest.mock('../src/utils/prismaClient', () => ({
+    user: {
+        update: jest.fn(),
+    },
+}));
+jest.mock('../src/utils/response');
 
-describe('Admin API - Basic Tests', () => {
-    let adminToken, userToPromoteId;
+describe('Admin Controller - Unit Tests', () => {
+    let req, res, next;
 
-    /**
-     * Setup: Create admin and regular user
-     */
-    beforeAll(async () => {
-        await TestHelpers.cleanup();
+    beforeEach(() => {
+        jest.clearAllMocks();
 
-        // Create admin user
-        const admin = await TestHelpers.createUserWithToken({
-            email: 'admin@test.com',
-            name: 'Admin User',
-            role: 'ADMIN'
-        });
-        adminToken = admin.token;
-
-        // Create regular user to be promoted
-        const regularUser = await TestHelpers.createUser({
-            email: 'promote@test.com',
-            name: 'User To Promote',
-            role: 'OWNER'
-        });
-        userToPromoteId = regularUser.id;
+        req = {
+            params: {},
+            user: { id: 1, role: 'ADMIN' },
+        };
+        res = {
+            status: jest.fn().mockReturnThis(),
+            json: jest.fn().mockReturnThis(),
+        };
+        next = jest.fn();
     });
 
-    /**
-     * Cleanup: Remove test data
-     */
-    afterAll(async () => {
-        await TestHelpers.cleanup();
-        await TestHelpers.disconnect();
-    });
+    describe('assignUserToLawyer', () => {
+        it('harus berhasil assign user sebagai lawyer', async () => {
+            // Arrange
+            req.params.userId = '5';
+            const updatedUser = {
+                id: 5,
+                name: 'New Lawyer',
+                email: 'newlawyer@test.com',
+                role: 'LAWYER',
+            };
 
-    /**
-     * Test: Promote User to Lawyer
-     * Admin should be able to change user role to LAWYER
-     */
-    it('should promote user to lawyer', async () => {
-        const response = await request(app)
-            .patch(`/api/admin/user/${userToPromoteId}/set-lawyer`)
-            .set('Authorization', `Bearer ${adminToken}`);
+            prisma.user.update.mockResolvedValue(updatedUser);
 
-        // Verify successful promotion
-        expect(response.status).toBe(200);
-        expect(response.body.success).toBe(true);
+            // Act
+            await assignUserToLawyer(req, res, next);
+
+            // Assert
+            expect(prisma.user.update).toHaveBeenCalledWith({
+                where: { id: 5 },
+                data: {
+                    role: 'LAWYER',
+                },
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    role: true,
+                },
+            });
+            expect(successResponse).toHaveBeenCalledWith(
+                res,
+                200,
+                'User assigned as Lawyer successfully',
+                updatedUser
+            );
+        });
+
+        it('harus mengembalikan error jika user ID invalid', async () => {
+            // Arrange
+            req.params.userId = 'invalid';
+
+            // Act
+            await assignUserToLawyer(req, res, next);
+
+            // Assert
+            expect(errorResponse).toHaveBeenCalledWith(res, 400, 'Invalid user id', 'INVALID_ID');
+            expect(prisma.user.update).not.toHaveBeenCalled();
+        });
+
+        it('harus memanggil next jika terjadi error', async () => {
+            // Arrange
+            req.params.userId = '5';
+            const error = new Error('Database error');
+            prisma.user.update.mockRejectedValue(error);
+
+            // Act
+            await assignUserToLawyer(req, res, next);
+
+            // Assert
+            expect(next).toHaveBeenCalledWith(error);
+        });
     });
 });
