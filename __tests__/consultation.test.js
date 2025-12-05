@@ -1,7 +1,3 @@
-/**
- * Unit Test untuk Consultation Controller
- * Menggunakan Jest mocking untuk mengisolasi logic dari dependencies
- */
 
 const {
     createConsultation,
@@ -26,6 +22,9 @@ jest.mock('../src/utils/prismaClient', () => ({
         findMany: jest.fn(),
         findUnique: jest.fn(),
         update: jest.fn(),
+    },
+    lawyer: {
+        findUnique: jest.fn(),
     },
 }));
 jest.mock('../src/utils/response');
@@ -182,17 +181,22 @@ describe('Consultation Controller - Unit Tests', () => {
     describe('listLawyerConsultations', () => {
         it('harus berhasil mengambil consultations lawyer', async () => {
             // Arrange
-            req.user = { id: 5, role: 'LAWYER' };
-            const mockConsultations = [{ id: 1, lawyerId: 5, status: 'IN_PROGRESS' }];
+            req.user = { id: 5, role: 'OWNER' }; // Lawyer is OWNER with Lawyer entry
+            const mockLawyer = { idLawyer: 10, userId: 5 };
+            const mockConsultations = [{ id: 1, lawyerId: 10, status: 'IN_PROGRESS' }];
 
+            prisma.lawyer.findUnique.mockResolvedValue(mockLawyer);
             prisma.consultation.findMany.mockResolvedValue(mockConsultations);
 
             // Act
             await listLawyerConsultations(req, res, next);
 
             // Assert
+            expect(prisma.lawyer.findUnique).toHaveBeenCalledWith({
+                where: { userId: 5 },
+            });
             expect(prisma.consultation.findMany).toHaveBeenCalledWith({
-                where: { lawyerId: 5 },
+                where: { lawyerId: 10 },
                 include: expect.any(Object),
                 orderBy: { createdAt: 'desc' },
             });
@@ -202,6 +206,19 @@ describe('Consultation Controller - Unit Tests', () => {
                 'Consultations for current lawyer fetched successfully',
                 mockConsultations
             );
+        });
+
+        it('harus mengembalikan error jika lawyer profile tidak ditemukan', async () => {
+            // Arrange
+            req.user = { id: 5, role: 'OWNER' };
+            prisma.lawyer.findUnique.mockResolvedValue(null);
+
+            // Act
+            await listLawyerConsultations(req, res, next);
+
+            // Assert
+            expect(errorResponse).toHaveBeenCalledWith(res, 404, 'Lawyer profile not found', 'NOT_FOUND');
+            expect(prisma.consultation.findMany).not.toHaveBeenCalled();
         });
     });
 
@@ -255,11 +272,13 @@ describe('Consultation Controller - Unit Tests', () => {
             // Arrange
             req.params.id = '1';
             req.body = { status: 'COMPLETED' };
-            req.user = { id: 5, role: 'LAWYER' };
-            const existingConsultation = { id: 1, lawyerId: 5 };
-            const updatedConsultation = { id: 1, status: 'COMPLETED', lawyerId: 5 };
+            req.user = { id: 5, role: 'OWNER' };
+            const mockLawyer = { idLawyer: 10, userId: 5 };
+            const existingConsultation = { id: 1, lawyerId: 10 };
+            const updatedConsultation = { id: 1, status: 'COMPLETED', lawyerId: 10 };
 
             prisma.consultation.findUnique.mockResolvedValue(existingConsultation);
+            prisma.lawyer.findUnique.mockResolvedValue(mockLawyer);
             prisma.consultation.update.mockResolvedValue(updatedConsultation);
 
             // Act
@@ -297,10 +316,12 @@ describe('Consultation Controller - Unit Tests', () => {
             // Arrange
             req.params.id = '1';
             req.body = { status: 'COMPLETED' };
-            req.user = { id: 6, role: 'LAWYER' };
-            const existingConsultation = { id: 1, lawyerId: 5 };
+            req.user = { id: 6, role: 'OWNER' };
+            const mockLawyer = { idLawyer: 20, userId: 6 };
+            const existingConsultation = { id: 1, lawyerId: 10 };
 
             prisma.consultation.findUnique.mockResolvedValue(existingConsultation);
+            prisma.lawyer.findUnique.mockResolvedValue(mockLawyer);
 
             // Act
             await updateStatus(req, res, next);
@@ -316,16 +337,18 @@ describe('Consultation Controller - Unit Tests', () => {
             // Arrange
             req.params.id = '1';
             req.body = { notes: 'Consultation completed', status: 'COMPLETED' };
-            req.user = { id: 5, role: 'LAWYER' };
-            const existingConsultation = { id: 1, lawyerId: 5 };
+            req.user = { id: 5, role: 'OWNER' };
+            const mockLawyer = { idLawyer: 10, userId: 5 };
+            const existingConsultation = { id: 1, lawyerId: 10 };
             const updatedConsultation = {
                 id: 1,
                 notes: 'Consultation completed',
                 status: 'COMPLETED',
-                lawyerId: 5,
+                lawyerId: 10,
             };
 
             prisma.consultation.findUnique.mockResolvedValue(existingConsultation);
+            prisma.lawyer.findUnique.mockResolvedValue(mockLawyer);
             prisma.consultation.update.mockResolvedValue(updatedConsultation);
 
             // Act
@@ -349,10 +372,12 @@ describe('Consultation Controller - Unit Tests', () => {
             // Arrange
             req.params.id = '1';
             req.body = { notes: 'Result' };
-            req.user = { id: 6, role: 'LAWYER' };
-            const existingConsultation = { id: 1, lawyerId: 5 };
+            req.user = { id: 6, role: 'OWNER' };
+            const mockLawyer = { idLawyer: 20, userId: 6 };
+            const existingConsultation = { id: 1, lawyerId: 10 };
 
             prisma.consultation.findUnique.mockResolvedValue(existingConsultation);
+            prisma.lawyer.findUnique.mockResolvedValue(mockLawyer);
 
             // Act
             await submitResult(req, res, next);

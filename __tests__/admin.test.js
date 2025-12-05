@@ -12,6 +12,11 @@ jest.mock('../src/utils/prismaClient', () => ({
     user: {
         update: jest.fn(),
     },
+    lawyer: {
+        findUnique: jest.fn(),
+        create: jest.fn(),
+    },
+    $transaction: jest.fn(),
 }));
 jest.mock('../src/utils/response');
 
@@ -36,36 +41,39 @@ describe('Admin Controller - Unit Tests', () => {
         it('harus berhasil assign user sebagai lawyer', async () => {
             // Arrange
             req.params.userId = '5';
-            const updatedUser = {
+            const existingUser = {
                 id: 5,
                 name: 'New Lawyer',
                 email: 'newlawyer@test.com',
-                role: 'LAWYER',
+                role: 'OWNER', // Role stays OWNER
+            };
+            const createdLawyer = {
+                idLawyer: 1,
+                userId: 5,
+                createdAt: new Date(),
             };
 
-            prisma.user.update.mockResolvedValue(updatedUser);
+            // Mock transaction
+            prisma.$transaction.mockImplementation(async (callback) => {
+                const tx = {
+                    user: { findUnique: jest.fn().mockResolvedValue(existingUser) },
+                    lawyer: {
+                        findUnique: jest.fn().mockResolvedValue(null),
+                        create: jest.fn().mockResolvedValue(createdLawyer),
+                    },
+                };
+                return callback(tx);
+            });
 
             // Act
             await assignUserToLawyer(req, res, next);
 
             // Assert
-            expect(prisma.user.update).toHaveBeenCalledWith({
-                where: { id: 5 },
-                data: {
-                    role: 'LAWYER',
-                },
-                select: {
-                    id: true,
-                    name: true,
-                    email: true,
-                    role: true,
-                },
-            });
             expect(successResponse).toHaveBeenCalledWith(
                 res,
                 200,
                 'User assigned as Lawyer successfully',
-                updatedUser
+                { user: existingUser, lawyer: createdLawyer }
             );
         });
 
@@ -78,14 +86,14 @@ describe('Admin Controller - Unit Tests', () => {
 
             // Assert
             expect(errorResponse).toHaveBeenCalledWith(res, 400, 'Invalid user id', 'INVALID_ID');
-            expect(prisma.user.update).not.toHaveBeenCalled();
+            expect(prisma.$transaction).not.toHaveBeenCalled();
         });
 
         it('harus memanggil next jika terjadi error', async () => {
             // Arrange
             req.params.userId = '5';
             const error = new Error('Database error');
-            prisma.user.update.mockRejectedValue(error);
+            prisma.$transaction.mockRejectedValue(error);
 
             // Act
             await assignUserToLawyer(req, res, next);

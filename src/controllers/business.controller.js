@@ -33,7 +33,12 @@ async function getMyBusinesses(req, res, next) {
                     select: { id: true, name: true, email: true, role: true }
                 },
                 lawyer: {
-                    select: { id: true, name: true, email: true, role: true }
+                    select: {
+                        idLawyer: true,
+                        user: {
+                            select: { id: true, name: true, email: true, role: true }
+                        }
+                    }
                 },
                 permits: {
                     select: { id: true, filename: true, createdAt: true }
@@ -48,7 +53,12 @@ async function getMyBusinesses(req, res, next) {
                         notes: true,
                         createdAt: true,
                         lawyer: {
-                            select: { id: true, name: true, email: true }
+                            select: {
+                                idLawyer: true,
+                                user: {
+                                    select: { id: true, name: true, email: true }
+                                }
+                            }
                         }
                     }
                 }
@@ -78,7 +88,12 @@ async function getBusiness(req, res, next) {
                     select: { id: true, name: true, email: true, role: true }
                 },
                 lawyer: {
-                    select: { id: true, name: true, email: true, role: true }
+                    select: {
+                        idLawyer: true,
+                        user: {
+                            select: { id: true, name: true, email: true, role: true }
+                        }
+                    }
                 },
                 permits: {
                     select: { id: true, filename: true, createdAt: true }
@@ -89,7 +104,12 @@ async function getBusiness(req, res, next) {
                 consultations: {
                     include: {
                         lawyer: {
-                            select: { id: true, name: true, email: true }
+                            select: {
+                                idLawyer: true,
+                                user: {
+                                    select: { id: true, name: true, email: true }
+                                }
+                            }
                         }
                     }
                 }
@@ -146,7 +166,12 @@ async function updateBusiness(req, res, next) {
                     select: { id: true, name: true, email: true }
                 },
                 lawyer: {
-                    select: { id: true, name: true, email: true }
+                    select: {
+                        idLawyer: true,
+                        user: {
+                            select: { id: true, name: true, email: true }
+                        }
+                    }
                 }
             }
         });
@@ -190,7 +215,12 @@ async function assignBusiness(req, res, next) {
                     select: { id: true, name: true, email: true, role: true }
                 },
                 lawyer: {
-                    select: { id: true, name: true, email: true, role: true }
+                    select: {
+                        idLawyer: true,
+                        user: {
+                            select: { id: true, name: true, email: true, role: true }
+                        }
+                    }
                 }
             }
         });
@@ -269,7 +299,12 @@ async function listAllBusinesses(req, res, next) {
                     select: { id: true, name: true, email: true, role: true }
                 },
                 lawyer: {
-                    select: { id: true, name: true, email: true, role: true }
+                    select: {
+                        idLawyer: true,
+                        user: {
+                            select: { id: true, name: true, email: true, role: true }
+                        }
+                    }
                 },
                 permits: true
             },

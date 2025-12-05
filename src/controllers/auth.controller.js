@@ -77,4 +77,42 @@ async function login(req, res, next) {
     }
 }
 
-module.exports = { register, login };
+async function getMe(req, res, next) {
+    try {
+        // Get user data from database
+        const user = await prisma.user.findUnique({
+            where: { id: req.user.id },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+                createdAt: true,
+                updatedAt: true
+            }
+        });
+
+        if (!user) {
+            return errorResponse(res, 404, 'User not found', 'NOT_FOUND');
+        }
+
+        // Check if user is a lawyer
+        const lawyer = await prisma.lawyer.findUnique({
+            where: { userId: req.user.id },
+            select: {
+                idLawyer: true,
+                createdAt: true
+            }
+        });
+
+        return successResponse(res, 200, 'Profile retrieved successfully', {
+            user,
+            isLawyer: !!lawyer,
+            lawyerProfile: lawyer || null
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+module.exports = { register, login, getMe };

@@ -47,7 +47,12 @@ async function listMyConsultations(req, res, next) {
             include: {
                 business: true,
                 lawyer: {
-                    select: { id: true, name: true, email: true }
+                    select: {
+                        idLawyer: true,
+                        user: {
+                            select: { id: true, name: true, email: true }
+                        }
+                    }
                 }
             },
             orderBy: { createdAt: 'desc' }
@@ -79,8 +84,17 @@ async function listAllConsultations(req, res, next) {
 
 async function listLawyerConsultations(req, res, next) {
     try {
+        // Get lawyer record for the logged-in user
+        const lawyer = await prisma.lawyer.findUnique({
+            where: { userId: req.user.id }
+        });
+
+        if (!lawyer) {
+            return errorResponse(res, 404, 'Lawyer profile not found', 'NOT_FOUND');
+        }
+
         const list = await prisma.consultation.findMany({
-            where: { lawyerId: req.user.id },
+            where: { lawyerId: lawyer.idLawyer },
             include: {
                 business: true
             },
@@ -108,7 +122,12 @@ async function assignLawyer(req, res, next) {
             include: {
                 business: true,
                 lawyer: {
-                    select: { id: true, name: true, email: true, role: true }
+                    select: {
+                        idLawyer: true,
+                        user: {
+                            select: { id: true, name: true, email: true, role: true }
+                        }
+                    }
                 }
             }
         });
@@ -130,7 +149,18 @@ async function updateStatus(req, res, next) {
             return errorResponse(res, 404, 'Consultation not found', 'NOT_FOUND');
         }
 
-        if (req.user.role === 'LAWYER' && consult.lawyerId !== req.user.id) {
+        // Check if user is a lawyer
+        const lawyer = await prisma.lawyer.findUnique({
+            where: { userId: req.user.id }
+        });
+
+        // If user is a lawyer, verify they own this consultation
+        if (lawyer && consult.lawyerId !== lawyer.idLawyer) {
+            return errorResponse(res, 403, 'Forbidden', 'FORBIDDEN');
+        }
+
+        // If user is not admin or the lawyer assigned, deny access
+        if (!lawyer && req.user.role !== 'ADMIN') {
             return errorResponse(res, 403, 'Forbidden', 'FORBIDDEN');
         }
 
@@ -166,7 +196,17 @@ async function submitResult(req, res, next) {
             return errorResponse(res, 404, 'Consultation not found', 'NOT_FOUND');
         }
 
-        if (req.user.role !== 'LAWYER' || consult.lawyerId !== req.user.id) {
+        // Verify user is a lawyer
+        const lawyer = await prisma.lawyer.findUnique({
+            where: { userId: req.user.id }
+        });
+
+        if (!lawyer) {
+            return errorResponse(res, 403, 'Only lawyers can submit results', 'FORBIDDEN');
+        }
+
+        // Verify lawyer owns this consultation
+        if (consult.lawyerId !== lawyer.idLawyer) {
             return errorResponse(res, 403, 'Forbidden', 'FORBIDDEN');
         }
 
@@ -217,7 +257,17 @@ async function uploadResultFile(req, res, next) {
             return errorResponse(res, 404, 'Consultation not found', 'NOT_FOUND');
         }
 
-        if (req.user.role !== 'LAWYER' || consult.lawyerId !== req.user.id) {
+        // Verify user is a lawyer
+        const lawyer = await prisma.lawyer.findUnique({
+            where: { userId: req.user.id }
+        });
+
+        if (!lawyer) {
+            return errorResponse(res, 403, 'Only lawyers can upload result files', 'FORBIDDEN');
+        }
+
+        // Verify lawyer owns this consultation
+        if (consult.lawyerId !== lawyer.idLawyer) {
             return errorResponse(res, 403, 'Forbidden', 'FORBIDDEN');
         }
 

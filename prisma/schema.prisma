@@ -9,69 +9,102 @@ generator client {
 
 enum Role {
   OWNER
-  LAWYER
   ADMIN
 }
 
 model User {
-  id        Int            @id @default(autoincrement())
-  email     String         @unique
+  id        Int       @id @default(autoincrement())
+  email     String    @unique
   password  String
   name      String
-  role      Role           @default(OWNER)
-  businesses Business[]    @relation("OwnerBusinesses")
-  assignedBusinesses Business[] @relation("LawyerBusinesses")
-  consultations Consultation[]
-  createdAt DateTime       @default(now())
-  updatedAt DateTime       @updatedAt
+  role      Role      @default(OWNER)
+
+  lawyer    Lawyer?
+
+  businesses Business[] @relation("OwnerBusinesses")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Lawyer {
+  idLawyer Int    @id @default(autoincrement())
+  userId   Int    @unique
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  businesses    Business[]     @relation("LawyerBusinesses")
+
+  consultations Consultation[] @relation("ConsultationLawyer")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Business {
-  id            Int            @id @default(autoincrement())
-  name          String
-  ownerId       Int?
-  owner         User?          @relation("OwnerBusinesses", fields: [ownerId], references: [id], onDelete: SetNull)
-  lawyerId      Int?
-  lawyer        User?          @relation("LawyerBusinesses", fields: [lawyerId], references: [id], onDelete: SetNull)
+  id      Int    @id @default(autoincrement())
+  name    String
+
+  ownerId Int?
+  owner   User? @relation("OwnerBusinesses", fields: [ownerId], references: [id], onDelete: SetNull)
+
+  lawyerId Int?
+  lawyer   Lawyer? @relation("LawyerBusinesses", fields: [lawyerId], references: [idLawyer], onDelete: SetNull)
+
   nib           String?        @unique
   permits       Permit[]
-  files         File[]
+  files         FileBusiness[]
   consultations Consultation[]
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-}
+  resultFiles   FileResult[]
 
-model Permit {
-  id         Int       @id @default(autoincrement())
-  businessId Int
-  business   Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  filename   String
-  createdAt  DateTime  @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Consultation {
-  id         Int       @id @default(autoincrement())
+  id         Int      @id @default(autoincrement())
   businessId Int
-  business   Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  lawyerId   Int?
-  lawyer     User?     @relation(fields: [lawyerId], references: [id], onDelete: SetNull)
-  status     ConsultationStatus @default(PENDING)
-  notes      String?
-  resultFileId Int? @unique
-  resultFile   File?   @relation("ConsultationResultFile", fields: [resultFileId], references: [id])
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
 
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  lawyerId Int?
+  lawyer   Lawyer? @relation("ConsultationLawyer", fields: [lawyerId], references: [idLawyer], onDelete: SetNull)
+
+  status ConsultationStatus @default(PENDING)
+  notes  String?
+
+  resultFileId Int?        @unique
+  resultFile   FileResult? @relation("ConsultationResultFile", fields: [resultFileId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
-model File {
-  id           Int             @id @default(autoincrement())
+model Permit {
+  id         Int      @id @default(autoincrement())
+  businessId Int
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  filename   String
+  url        String
+  createdAt  DateTime @default(now())
+}
+
+model FileBusiness {
+  id         Int      @id @default(autoincrement())
+  businessId Int
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  filename   String
+  url        String
+  createdAt  DateTime @default(now())
+}
+
+model FileResult {
+  id           Int           @id @default(autoincrement())
   businessId   Int
-  business     Business        @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  business     Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
   filename     String
   url          String
-  createdAt    DateTime        @default(now())
-  consultation Consultation?   @relation("ConsultationResultFile")
+  createdAt    DateTime      @default(now())
+
+  consultation Consultation? @relation("ConsultationResultFile")
 }
 
 enum ConsultationStatus {

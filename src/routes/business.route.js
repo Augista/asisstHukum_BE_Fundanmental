@@ -3,6 +3,7 @@ const router = express.Router();
 
 const businessCtrl = require('../controllers/business.controller');
 const { authenticate, authorizeRole } = require('../middleware/auth');
+const { requireOwner } = require('../middleware/owner');
 const { validate } = require('../middleware/validate');
 const {
   businessSchema,
@@ -15,7 +16,7 @@ const { upload } = require('../services/storage');
 router.get(
   '/my',
   authenticate,
-  authorizeRole(['owner']),
+  requireOwner, // Block admins and lawyers
   businessCtrl.getMyBusinesses
 );
 
@@ -31,7 +32,7 @@ router.get(
 router.post(
   '/',
   authenticate,
-  authorizeRole(['owner']),
+  requireOwner, // Block admins and lawyers
   validate(businessSchema),
   businessCtrl.createBusiness
 );
@@ -48,7 +49,7 @@ router.get(
 router.put(
   '/:id',
   authenticate,
-  authorizeRole(['owner']),
+  requireOwner, // Block admins and lawyers
   validate(businessUpdateSchema),
   businessCtrl.updateBusiness
 );
@@ -70,20 +71,20 @@ router.patch(
   businessCtrl.assignBusiness
 );
 
-// Upload legal permit (Owner & Admin)
+// Upload legal permit (Owner only)
 router.post(
   '/:id/permit',
   authenticate,
-  authorizeRole(['owner', 'admin']),
+  requireOwner, // Block admins and lawyers
   upload.single('file'),
   businessCtrl.uploadPermit
 );
 
-// Remove permit
+// Remove permit (Owner only)
 router.delete(
   '/:businessId/permit/:permitId',
   authenticate,
-  authorizeRole(['owner', 'admin']),
+  requireOwner, // Block admins and lawyers
   businessCtrl.removePermit
 );
 

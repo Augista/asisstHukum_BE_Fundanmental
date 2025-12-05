@@ -3,6 +3,8 @@ const router = express.Router();
 
 const consultCtrl = require('../controllers/consultation.controller');
 const { authenticate, authorizeRole } = require('../middleware/auth');
+const { requireOwner } = require('../middleware/owner');
+const { isLawyer } = require('../middleware/lawyer');
 const { validate } = require('../middleware/validate');
 const {
   consultationSchema,
@@ -12,10 +14,11 @@ const {
 } = require('../validation/schema');
 const { upload } = require('../services/storage');
 
+// Owner creates consultation
 router.post(
   '/',
   authenticate,
-  authorizeRole(['owner']),
+  requireOwner, // Block admins and lawyers
   validate(consultationSchema),
   consultCtrl.createConsultation
 );
@@ -27,33 +30,37 @@ router.get(
   consultCtrl.listAllConsultations
 );
 
+// Lawyer lists their consultations
 router.get(
   '/lawyer',
   authenticate,
-  authorizeRole(['lawyer']),
+  isLawyer, // Block admins and owners
   consultCtrl.listLawyerConsultations
 );
 
+// Lawyer submits result
 router.patch(
   '/:id/result',
   authenticate,
-  authorizeRole(['lawyer']),
-   validate(consultationResultSchema),
+  isLawyer, // Block admins and owners
+  validate(consultationResultSchema),
   consultCtrl.submitResult
 );
 
+// Lawyer uploads result file
 router.post(
   '/:id/result-file',
   authenticate,
-  authorizeRole(['lawyer']),
+  isLawyer, // Block admins and owners
   upload.single('file'),
   consultCtrl.uploadResultFile
 );
 
+// Owner lists their consultations
 router.get(
   '/my',
   authenticate,
-  authorizeRole(['owner']),
+  requireOwner, // Block admins and lawyers
   consultCtrl.listMyConsultations
 );
 
