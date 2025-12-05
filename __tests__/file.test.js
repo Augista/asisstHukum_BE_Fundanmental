@@ -1,7 +1,3 @@
-/**
- * Unit Test untuk File Controller
- * Menggunakan Jest mocking untuk mengisolasi logic dari dependencies
- */
 
 const {
     uploadFile,

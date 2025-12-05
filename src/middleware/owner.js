@@ -1,13 +1,8 @@
 const prisma = require('../utils/prismaClient');
 const { errorResponse } = require('../utils/response');
 
-/**
- * Middleware to ensure only pure OWNER users can access
- * Blocks: ADMIN and LAWYER
- */
 async function requireOwner(req, res, next) {
     try {
-        // Block if user is ADMIN
         if (req.user.role === 'ADMIN') {
             return errorResponse(res, 403,
                 'Admins cannot perform owner actions',
@@ -15,7 +10,6 @@ async function requireOwner(req, res, next) {
             );
         }
 
-        // Block if user is a lawyer
         const lawyer = await prisma.lawyer.findUnique({
             where: { userId: req.user.id }
         });
@@ -26,8 +20,6 @@ async function requireOwner(req, res, next) {
                 'LAWYER_FORBIDDEN'
             );
         }
-
-        // User is pure OWNER, allow access
         next();
     } catch (error) {
         next(error);

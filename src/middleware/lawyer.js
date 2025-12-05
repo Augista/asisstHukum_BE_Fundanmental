@@ -1,14 +1,8 @@
 const prisma = require('../utils/prismaClient');
 const { errorResponse } = require('../utils/response');
 
-/**
- * Middleware to verify if the authenticated user is a lawyer
- * Checks if user has an entry in the Lawyer table
- * Blocks: ADMIN and OWNER (non-lawyers)
- */
 async function isLawyer(req, res, next) {
     try {
-        // Block if user is ADMIN
         if (req.user.role === 'ADMIN') {
             return errorResponse(res, 403,
                 'Admins cannot perform lawyer actions',

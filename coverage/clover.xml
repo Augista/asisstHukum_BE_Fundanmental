@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1764943199886" clover="3.2.0">
-  <project timestamp="1764943199886" name="All files">
+<coverage generated="1764951961027" clover="3.2.0">
+  <project timestamp="1764951961027" name="All files">
     <metrics statements="532" coveredstatements="203" conditionals="255" coveredconditionals="74" methods="60" coveredmethods="23" elements="847" coveredelements="300" complexity="0" loc="532" ncloc="532" packages="6" files="23" classes="23"/>
     <package name="controllers">
       <metrics statements="275" coveredstatements="199" conditionals="126" coveredconditionals="74" methods="27" coveredmethods="23"/>
@@ -364,30 +364,30 @@
         <metrics statements="12" coveredstatements="0" conditionals="4" coveredconditionals="0" methods="1" coveredmethods="0"/>
         <line num="1" count="0" type="stmt"/>
         <line num="2" count="0" type="stmt"/>
-        <line num="10" count="0" type="stmt"/>
-        <line num="12" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="5" count="0" type="stmt"/>
+        <line num="6" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="7" count="0" type="stmt"/>
         <line num="13" count="0" type="stmt"/>
-        <line num="19" count="0" type="stmt"/>
-        <line num="23" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="24" count="0" type="stmt"/>
-        <line num="31" count="0" type="stmt"/>
+        <line num="17" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="18" count="0" type="stmt"/>
+        <line num="25" count="0" type="stmt"/>
+        <line num="26" count="0" type="stmt"/>
+        <line num="28" count="0" type="stmt"/>
         <line num="32" count="0" type="stmt"/>
-        <line num="34" count="0" type="stmt"/>
-        <line num="38" count="0" type="stmt"/>
       </file>
       <file name="owner.js" path="C:\DENTHA_PUNYA\Kuliah\semester_5\backend_dasar\fp\asisstHukum_BE_Fundanmental\src\middleware\owner.js">
         <metrics statements="11" coveredstatements="0" conditionals="4" coveredconditionals="0" methods="1" coveredmethods="0"/>
         <line num="1" count="0" type="stmt"/>
         <line num="2" count="0" type="stmt"/>
-        <line num="9" count="0" type="stmt"/>
-        <line num="11" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="12" count="0" type="stmt"/>
-        <line num="19" count="0" type="stmt"/>
-        <line num="23" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="24" count="0" type="stmt"/>
-        <line num="31" count="0" type="stmt"/>
-        <line num="33" count="0" type="stmt"/>
-        <line num="37" count="0" type="stmt"/>
+        <line num="5" count="0" type="stmt"/>
+        <line num="6" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="7" count="0" type="stmt"/>
+        <line num="13" count="0" type="stmt"/>
+        <line num="17" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="18" count="0" type="stmt"/>
+        <line num="23" count="0" type="stmt"/>
+        <line num="25" count="0" type="stmt"/>
+        <line num="29" count="0" type="stmt"/>
       </file>
       <file name="sanitize.js" path="C:\DENTHA_PUNYA\Kuliah\semester_5\backend_dasar\fp\asisstHukum_BE_Fundanmental\src\middleware\sanitize.js">
         <metrics statements="23" coveredstatements="0" conditionals="26" coveredconditionals="0" methods="3" coveredmethods="0"/>

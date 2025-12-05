@@ -1,7 +1,3 @@
-/**
- * Unit Test untuk Business Controller
- * Menggunakan Jest mocking untuk mengisolasi logic dari dependencies
- */
 
 const {
     createBusiness,
