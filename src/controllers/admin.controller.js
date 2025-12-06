@@ -8,10 +8,8 @@ async function assignUserToLawyer(req, res, next) {
         if (Number.isNaN(userId)) {
             return errorResponse(res, 400, 'Invalid user id', 'INVALID_ID');
         }
-
-        // Use transaction to verify user exists and create lawyer entry
+        // Use transaction to ensure data consistency
         const result = await prisma.$transaction(async (tx) => {
-            // Verify user exists
             const user = await tx.user.findUnique({
                 where: { id: userId },
                 select: {
@@ -22,33 +20,32 @@ async function assignUserToLawyer(req, res, next) {
                 }
             });
 
-            if (!user) {
-                throw new Error('User not found');
-            }
+            if (!user) throw new Error('User not found');
 
-            // Check if lawyer entry already exists
-            const existingLawyer = await tx.lawyer.findUnique({
+            // Check existing lawyer entry
+            let lawyer = await tx.lawyer.findUnique({
                 where: { userId }
             });
 
-            let lawyer;
-            if (!existingLawyer) {
-                // Create lawyer entry
+            if (!lawyer) {
                 lawyer = await tx.lawyer.create({
-                    data: {
-                        userId
-                    },
+                    data: { userId },
                     select: {
                         idLawyer: true,
                         userId: true,
                         createdAt: true
                     }
                 });
-            } else {
-                lawyer = existingLawyer;
             }
 
-            return { user, lawyer };
+            // Update user role -> LAWYER
+            const updatedUser = await tx.user.update({
+                where: { id: userId },
+                data: { role: 'LAWYER' },
+                select: { id: true, name: true, email: true, role: true }
+            });
+
+            return { user: updatedUser, lawyer };
         });
 
         return successResponse(res, 200, 'User assigned as Lawyer successfully', result);
@@ -57,5 +54,6 @@ async function assignUserToLawyer(req, res, next) {
         next(error);
     }
 }
+
 
 module.exports = { assignUserToLawyer };

@@ -3,9 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Dashboard</title>
+  <title>Legal Assist UMKM Dashboard</title>
+
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
+
 <body>
   <nav class="navbar navbar-dark bg-primary">
     <div class="container">
@@ -16,140 +18,635 @@
 
   <div class="container mt-4">
 
-    <!-- Profile Info -->
     <h4>Welcome</h4>
     <div id="userInfo" class="mb-4 fw-bold"></div>
 
-    <!-- Tabs -->
+    <!-- TABS -->
     <ul class="nav nav-tabs" id="tabs">
-      <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#doc">📄 Dokumen</a></li>
-      <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#consult">👨‍⚖️ Konsultasi</a></li>
+      <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#docs">Dokumen</a></li>
+      <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#business">Business</a></li>
+      <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#consult">Konsultasi</a></li>
+
+      <!-- ADMIN ONLY -->
+      <li class="nav-item" id="tabAdmin">
+        <a class="nav-link" data-bs-toggle="tab" href="#admin">Admin Panel</a>
+      </li>
+
+      <!-- LAWYER ONLY -->
+      <li class="nav-item" id="tabLawyer">
+        <a class="nav-link" data-bs-toggle="tab" href="#lawyer">Lawyer Panel</a>
+      </li>
     </ul>
 
     <div class="tab-content mt-3">
 
-      <!-- Doc Tab -->
-      <div class="tab-pane fade show active" id="doc">
-        <h5>Upload Dokumen Legal</h5>
+      <!-- DOCS -->
+      <div class="tab-pane fade show active" id="docs">
+        <h5>Upload Dokumen</h5>
+        <select id="bizSelect" class="form-select w-50 mb-2">
+          <option value="">Pilih Business</option>
+        </select>
         <input type="file" id="fileInput" class="form-control w-50 mb-3">
         <button id="uploadBtn" class="btn btn-success btn-sm">Upload</button>
 
         <hr>
-        <h5>Dokumen Saya</h5>
-        <ul id="fileList" class="list-group"></ul>
+
+        <h5>Daftar Dokumen</h5>
+        <ul id="bizFileList" class="list-group"></ul>
       </div>
 
-      <!-- Consult Tab -->
-      <div class="tab-pane fade" id="consult">
-        <h5>Ajukan Konsultasi Hukum</h5>
-        <textarea id="consultNote" class="form-control w-75 mb-3" rows="3" placeholder="Deskripsikan masalah anda"></textarea>
-        <button id="consultBtn" class="btn btn-primary btn-sm">Kirim Permintaan</button>
+      <!-- BUSINESS -->
+      <div class="tab-pane fade" id="business">
+        <h5>Buat Business</h5>
+        <input class="form-control w-50 mb-2" id="bizName" placeholder="Nama bisnis">
+        <input class="form-control w-50 mb-2" id="bizAddress" placeholder="Alamat">
+        <input class="form-control w-50 mb-2" id="bizType" placeholder="Tipe bisnis">
+        <button id="bizCreateBtn" class="btn btn-primary btn-sm">Create</button>
 
         <hr>
-        <h5>Riwayat Permintaan</h5>
+
+        <h5>Business Saya</h5>
+        <ul id="bizList" class="list-group"></ul>
+      </div>
+
+      <!-- CONSULT OWNER -->
+      <div class="tab-pane fade" id="consult">
+        <h5>Ajukan Konsultasi</h5>
+        <input type="number" id="consultBizId" class="form-control w-25 mb-2" placeholder="Business ID">
+        <textarea id="consultNote" class="form-control w-75 mb-2" rows="3" placeholder="Deskripsi"></textarea>
+        <button id="consultBtn" class="btn btn-primary btn-sm">Ajukan</button>
+
+        <hr>
+
+        <h5>Konsultasi Saya</h5>
         <ul id="consultList" class="list-group"></ul>
+      </div>
+
+      <!-- ADMIN PANEL -->
+      <div class="tab-pane fade" id="admin">
+
+        <h5>Set User sebagai Lawyer</h5>
+        <input id="adminUserId" type="number" class="form-control w-25 mb-2" placeholder="User ID">
+        <button id="setLawyerBtn" class="btn btn-warning btn-sm">Set as Lawyer</button>
+
+        <hr>
+
+        <h5>Semua Business</h5>
+        <ul id="adminBizList" class="list-group"></ul>
+
+        <hr>
+
+        <h5>Semua Konsultasi</h5>
+        <ul id="adminConsultList" class="list-group"></ul>
+
+        <hr>
+
+        <h5>Semua Dokumen</h5>
+        <ul id="adminFileList" class="list-group"></ul>
+      </div>
+
+      <!-- LAWYER PANEL -->
+      <div class="tab-pane fade" id="lawyer">
+        <h5>Konsultasi Untuk Saya</h5>
+        <ul id="lawyerConsultList" class="list-group"></ul>
       </div>
 
     </div>
   </div>
 
 <script>
-  const token = localStorage.getItem('token');
-  if (!token) window.location.href = '/login.html';
+  const token = localStorage.getItem("token");
+  if (!token) location.href = "/login.html";
+
   const auth = { Authorization: `Bearer ${token}` };
+  const BASE = "http://localhost:3001/api";
 
-  // Logout
-  //logout.onclick = () => {
-    //localStorage.removeItem('token');
-    //window.location.href = '/login.html';
-  //};
-
-  const loadProfile = async () => {
-    const res = await fetch('/api/users/me', {
-      method: 'GET',
-      mode: 'cors',
-      headers: auth
-    });
-    const user = await res.json();
-    userInfo.textContent = `${user.name} (${user.email})`;
+  logout.onclick = () => {
+    localStorage.removeItem("token");
+    location.href = "/login.html";
   };
 
-  const loadFiles = async () => {
-    const res = await fetch('/api/files/my', {
-      method: 'GET',
-      mode: 'cors',
-      headers: auth
-    });
-    const files = await res.json();
+  /* ==============================
+      LOAD PROFILE + ROLE CONTROL
+  ===============================*/
+  async function loadProfile() {
+    const r = await fetch(BASE + "/auth/me", { headers: auth });
+    const result = await r.json();
+    const user = result.data.user;
+
+    userInfo.textContent = `${user.name} | ${user.email} | Role: ${user.role}`;
+
+    if (user.role !== "ADMIN") document.getElementById("tabAdmin").style.display = "none";
+    if (user.role !== "LAWYER") document.getElementById("tabLawyer").style.display = "none";
+
+    if (user.role === "LAWYER") {
+      document.querySelector('a[href="#business"]').parentElement.style.display = "none";
+      document.querySelector('a[href="#consult"]').parentElement.style.display = "none";
+    }
+
+    if (user.role === "ADMIN") {
+      document.querySelector('a[href="#business"]').parentElement.style.display = "none";
+      document.querySelector('a[href="#consult"]').parentElement.style.display = "none";
+      document.getElementById("tabLawyer").style.display = "none";
+    }
+  }
+
+  /* ==============================
+      FILES (OWNER + ADMIN)
+  ===============================*/
+  async function loadFiles() {
+    const r = await fetch(BASE + "/files/business/1/files", { headers: auth });
+    const files = await r.json();
+
     fileList.innerHTML = files.map(f => `
-      <li class="list-group-item d-flex justify-content-between align-items-center">
-        ${f.filename}
+      <li class="list-group-item d-flex justify-content-between">
+        ${f.originalName}
         <div>
-          <a href="/api/files/${f.id}" target="_blank" class="btn btn-sm btn-outline-info">View</a>
-          <button class="btn btn-sm btn-outline-danger" onclick="delFile('${f.id}')">Delete</button>
+          <a href="${BASE}/files/${f.id}/download" class="btn btn-sm btn-outline-info" target="_blank">Download</a>
+          <button onclick="delFile('${f.id}')" class="btn btn-sm btn-outline-danger">Delete</button>
         </div>
-      </li>
-    `).join('');
-  };
+      </li>`).join("");
+  }
 
-  const delFile = async (id) => {
-    await fetch('/api/files/' + id, {
-      method: 'DELETE',
-      mode: 'cors',
-      headers: auth
-    });
+  async function delFile(id) {
+    await fetch(BASE + "/files/" + id, { method: "DELETE", headers: auth });
     loadFiles();
-  };
+  }
 
   uploadBtn.onclick = async () => {
     const file = fileInput.files[0];
-    if (!file) return alert("Pilih file dulu");
+    const businessId = bizSelect.value;
+
+    if (!businessId) return alert("Pilih bisnis terlebih dahulu.");
+    if (!file) return alert("Pilih file dulu.");
 
     const form = new FormData();
     form.append("file", file);
 
-    await fetch('/api/files/upload', {
-      method: 'POST',
-      mode: 'cors',
+    await fetch(`${BASE}/business/${businessId}/permit`, {
+      method: "POST",
       headers: auth,
       body: form
     });
+
+    alert("File berhasil di-upload.");
     fileInput.value = "";
     loadFiles();
+};
+
+
+  /* ==============================
+      BUSINESS (OWNER)
+  ===============================*/
+  async function loadBusiness() {
+    const r = await fetch(BASE + "/business/my", { headers: auth });
+    const result = await r.json();
+    const items = result.data; // sesuai structure API terbaru
+
+    bizList.innerHTML = items.map(b => {
+        const ownerName = b.owner?.name ?? "Tanpa Owner";
+        const lawyerName = b.lawyer?.name ?? "Tanpa Lawyer";
+
+        const permitsHtml = (b.permits || []).map(p =>
+            `<li class="list-group-item">Permit: ${p.filename} (Created: ${new Date(p.createdAt).toLocaleString()})</li>`
+        ).join("");
+
+        const filesHtml = (b.files || []).map(f =>
+            `<li class="list-group-item">File: ${f.filename} (Created: ${new Date(f.createdAt).toLocaleString()})</li>`
+        ).join("");
+
+        const consultationsHtml = (b.consultations || []).map(c =>
+            `<li class="list-group-item">
+                Status: ${c.status} | Notes: ${c.notes} | Lawyer: ${c.lawyer?.name ?? "Tanpa Lawyer"}
+                <br>Created: ${new Date(c.createdAt).toLocaleString()}
+            </li>`
+        ).join("");
+
+        return `
+            <li class="list-group-item mb-2">
+                <strong>ID:</strong> ${b.id} - <strong>${b.name}</strong><br>
+                <em>Owner:</em> ${ownerName} | <em>Lawyer:</em> ${lawyerName}
+                ${permitsHtml ? `<ul class="list-group mt-2">${permitsHtml}</ul>` : ""}
+                ${filesHtml ? `<ul class="list-group mt-2">${filesHtml}</ul>` : ""}
+                <strong>Consultations of this Bussiness:</strong> ${b.id} - <strong>${b.name}</strong><br>
+                ${consultationsHtml ? `<ul class="list-group mt-2">${consultationsHtml}</ul>` : ""}
+            </li>
+        `;
+    }).join("");
+      
+    
+    bizFileList.innerHTML = items.map(b => {
+     const permitsHtml = (b.permits || []).map(p => `
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            ${p.filename} (Created: ${new Date(p.createdAt).toLocaleString()})
+            <div>
+                <button onclick="viewFile(${p.id})" class="btn btn-sm btn-outline-info me-1">View</button>
+                <button onclick="downloadFile(${p.id}, '${p.filename}')" class="btn btn-sm btn-outline-success me-1">Download</button>
+                <button onclick="delFile(${p.id})" class="btn btn-sm btn-outline-danger">Delete</button>
+            </div>
+        </li>
+    `).join("");
+const filesHtml = (b.files || []).map(f => `
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+        ${f.filename} (Created: ${new Date(f.createdAt).toLocaleString()})
+        <div>
+            <button onclick="viewFile(${f.id})" class="btn btn-sm btn-outline-info me-1">View</button>
+            <button onclick="downloadFile(${f.id}, '${f.filename}')" class="btn btn-sm btn-outline-success me-1">Download</button>
+            <button onclick="delFile(${f.id})" class="btn btn-sm btn-outline-danger">Delete</button>
+        </div>
+    </li>
+`).join("");
+
+    return `
+        <li class="list-group-item mb-2">
+            <strong>ID:</strong> ${b.id} - <strong>${b.name}</strong><br>
+            ${permitsHtml ? `<ul class="list-group mt-2">${permitsHtml}</ul>` : ""}
+            ${filesHtml ? `<ul class="list-group mt-2">${filesHtml}</ul>` : ""}
+        </li>
+    `;
+}).join("");
+
+    const select = document.getElementById("bizSelect");
+    select.innerHTML = '<option value="">Pilih Business</option>'; // reset
+    items.forEach(b => {
+        const opt = document.createElement("option");
+        opt.value = b.id;
+        opt.textContent = `${b.name} (ID ${b.id})`;
+        select.appendChild(opt);
+    });
+}
+
+  bizCreateBtn.onclick = async () => {
+    await fetch(BASE + "/business", {
+      method: "POST",
+      headers: { ...auth, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: bizName.value,
+        address: bizAddress.value,
+        type: bizType.value
+      })
+    });
+    loadBusiness();
   };
 
-  const loadConsult = async () => {
-    const res = await fetch('/api/consult/my', {
-      method: 'GET',
-      mode: 'cors',
-      headers: auth
-    });
-    const items = await res.json();
-    consultList.innerHTML = items.map(c => `
-      <li class="list-group-item">
-        ${c.note} - <strong>${c.status}</strong>
-      </li>
-    `).join('');
-  };
+  /* ==============================
+      CONSULTATIONS OWNER
+  ===============================*/
+
+async function loadConsult() {
+try {
+const r = await fetch(BASE + "/consultations/my", { headers: auth });
+const result = await r.json();
+const items = result.data || [];
+
+
+consultList.innerHTML = items.map(c => {
+const businessName = c.business?.name ?? "Tanpa Business";
+const lawyerName = c.lawyer?.name ?? "Tanpa Lawyer";
+
+
+return `
+<li class="list-group-item">
+<b>ID:</b> ${c.id}<br>
+<b>Notes:</b> ${c.notes}<br>
+<b>Status:</b> ${c.status}<br>
+<b>Business:</b> ${businessName}<br>
+<b>Lawyer:</b> ${lawyerName}
+</li>
+`;
+}).join("");
+} catch (err) {
+console.error('loadConsult failed', err);
+}
+}
+
+
+
+
+consultBtn.onclick = async () => {
+try {
+await fetch(BASE + "/consultations", {
+method: "POST",
+headers: { ...auth, "Content-Type": "application/json" },
+body: JSON.stringify({
+businessId: Number(consultBizId.value),
+description: consultNote.value
+})
+});
+await loadConsult();
+} catch (err) {
+console.error('submit consult failed', err);
+}
+};
+
+  /* ==============================
+      LAWYER PANEL
+  ===============================*/
+
+async function loadLawyerConsult() {
+    const r = await fetch(BASE + "/consultations/lawyer", { headers: auth });
+    const result = await r.json();
+    const items = result.data;
+
+    lawyerConsultList.innerHTML = items.map(c => {
+        const bizName = c.business?.name ?? "Tanpa Business";
+        const ownerName = c.business?.owner?.name ?? "Tanpa Owner";
+
+        return `
+            <li class="list-group-item">
+                <b>ID Konsultasi:</b> ${c.id}<br>
+                <b>Business:</b> ${bizName}<br>
+                <b>Owner:</b> ${ownerName}<br>
+                <b>Notes:</b> ${c.notes || "-"}<br>
+                <b>Status:</b> 
+                <span class="badge bg-primary">${c.status}</span><br>
+                <b>Dibuat:</b> ${new Date(c.createdAt).toLocaleString()}
+            </li>
+        `;
+    }).join("");
+}
+
 
   consultBtn.onclick = async () => {
-    const note = consultNote.value;
-    if (!note) return alert("Isi dulu deskripsinya!");
-    await fetch('/api/consult', {
-      method: 'POST',
-      mode: 'cors',
-      headers: { ...auth, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ note })
+    await fetch(BASE + "/consultations", {
+      method: "POST",
+      headers: { ...auth, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        businessId: Number(consultBizId.value),
+        description: consultNote.value
+      })
     });
-    consultNote.value = "";
     loadConsult();
   };
 
+  /* ==============================
+      ADMIN PANEL
+  ===============================*/
+ setLawyerBtn.onclick = async () => {
+  try {
+    const id = adminUserId.value;
+    if (!id) return alert('Masukkan user id');
+
+
+const res = await fetch(`${BASE}/admin/user/${id}/set-lawyer`, {
+method: "PATCH",
+headers: auth
+});
+
+
+if (!res.ok) throw new Error('set lawyer failed');
+alert("User updated.");
+await loadAdminBusiness();
+} catch (err) {
+console.error(err);
+alert('Gagal update user');
+}
+};
+
+  async function loadAdminBusiness() {
+    const r = await fetch(BASE + "/business/all", { headers: auth });
+    const result = await r.json();
+    const items = result.data;
+
+    adminBizList.innerHTML = items.map(
+      b => `<li class="list-group-item">
+        <b>${b.name}</b> (ID ${b.id})<br>
+        Owner: ${b.owner?.name || "-"}
+      </li>`
+    ).join("");
+  }
+
+  async function loadAdminConsult() {
+    const r = await fetch(BASE + "/consultations/admin", { headers: auth });
+    const result = await r.json();
+
+    const items = result.data;
+
+    adminConsultList.innerHTML = items.map(item => {
+        const id = item.id;
+        const notes = item.notes ?? "No notes";
+        const businessName = item.business?.name ?? "Tanpa Nama";
+        const lawyerName = item.lawyer?.name ?? "Tanpa Lawyer";
+        const status = item.status;
+
+        return `
+            <div class="card mb-2 p-2 border">
+                <strong>ID: ${id} </strong>
+                <strong>Notes Consultation:</strong> ${notes} <br>
+                <strong>Status: </strong> ${status} <br>
+                <em>Business Name:</em> ${businessName} <br>
+                <em>Lawyer:</em> ${lawyerName}
+            </div>
+        `;
+    }).join("");
+}
+async function viewFile(fileId, type = "business") {
+    const token = localStorage.getItem("token");
+    let url = "";
+
+    if (type === "business") url = `${BASE}/business/files/${fileId}/download`;
+    if (type === "permit") url = `${BASE}/permits/${fileId}/download`;
+    if (type === "result") url = `${BASE}/results/${fileId}/download`;
+
+    const res = await fetch(url, {
+        headers: { "Authorization": `Bearer ${token}` }
+    });
+
+    if (!res.ok) return alert("Failed to view file");
+
+    const blob = await res.blob();
+    const blobUrl = window.URL.createObjectURL(blob);
+    window.open(blobUrl, "_blank");
+}
+
+
+async function downloadFile(fileId, filename, type = "business") {
+    const token = localStorage.getItem("token");
+    let url = "";
+
+    if (type === "business") url = `${BASE}/business/files/${fileId}/download`;
+    if (type === "permit") url = `${BASE}/permits/${fileId}/download`;
+    if (type === "result") url = `${BASE}/results/${fileId}/download`;
+
+    const res = await fetch(url, {
+        headers: { "Authorization": `Bearer ${token}` }
+    });
+
+    if (!res.ok) return alert("Failed to download file");
+
+    const blob = await res.blob();
+    const a = document.createElement("a");
+    a.href = window.URL.createObjectURL(blob);
+    a.download = filename || "file.pdf";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(a.href);
+}
+
+
+async function delFile(fileId) {
+    const token = localStorage.getItem("token");
+    const res = await fetch(`${BASE}/files/${fileId}`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${token}` }
+    });
+
+    if (!res.ok) return alert("Failed to delete file");
+    loadAdminFiles(); // refresh list
+}
+
+
+async function loadAdminFiles() {
+    const token = localStorage.getItem("token");
+    const authHeader = { "Authorization": `Bearer ${token}` };
+
+    try {
+        const r = await fetch(BASE + "/business/all", { headers: authHeader });
+        const result = await r.json();
+        const items = result.data;
+
+        adminFileList.innerHTML = items.map(b => {
+            if (!b.permits || b.permits.length === 0) return "";
+
+            const filesHtml = b.permits.map(f => `
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    ${f.filename} (Created: ${new Date(f.createdAt).toLocaleString()})
+                    <div>
+                        <button onclick="viewFile(${f.id})" class="btn btn-sm btn-outline-info me-1">View</button>
+                        <button onclick="downloadFile(${f.id}, '${f.filename}')" class="btn btn-sm btn-outline-success me-1">Download</button>
+                        <button onclick="delFile(${f.id})" class="btn btn-sm btn-outline-danger">Delete</button>
+                    </div>
+                </li>
+            `).join("");
+
+            const ownerName = b.owner?.name ?? "Tanpa Owner";
+            const lawyerName = b.lawyer?.name ?? "Tanpa Lawyer";
+
+            return `
+                <div class="card mb-2 p-2 border">
+                    <strong>Business:</strong> ${b.name} (ID ${b.id})<br>
+                    <em>Owner:</em> ${ownerName}<br>
+                    <em>Lawyer:</em> ${lawyerName}
+                    <ul class="list-group mt-2">
+                        ${filesHtml}
+                    </ul>
+                </div>
+            `;
+        }).join("");
+    } catch (err) {
+        console.error("Failed to load admin files", err);
+    }
+}
+
+
+
+  /* ==============================
+      LAWYER PANEL
+  ===============================*/
+  async function loadLawyerConsult() {
+    const r = await fetch(BASE + "/consultations/lawyer", { headers: auth });
+    const result = await r.json();
+    const items = result.data;
+
+    lawyerConsultList.innerHTML = items.map(c => {
+        const bizName = c.business?.name ?? "Tanpa Business";
+
+        return `
+            <li class="list-group-item">
+                <b>ID Konsultasi:</b> ${c.id}<br>
+                <b>Business:</b> ${bizName}<br>
+                <b>Notes:</b> ${c.notes || "-"}<br>
+                <b>Status:</b> 
+                <span class="badge bg-primary">${c.status}</span><br>
+                <b>Dibuat:</b> ${new Date(c.createdAt).toLocaleString()}
+            </li>
+        `;
+    }).join("");
+}
+
+
+
+
+
+async function loadLawyerConsult() {
+const r = await fetch(BASE + "/consultations/lawyer", { headers: auth });
+const result = await r.json();
+const items = result.data;
+
+
+lawyerConsultList.innerHTML = items.map(c => {
+const bizName = c.business?.name ?? "Tanpa Business";
+
+
+return `
+<li class="list-group-item">
+<b>ID Konsultasi:</b> ${c.id}<br>
+<b>Business:</b> ${bizName}<br>
+<b>Notes:</b> ${c.notes || "-"}<br>
+<b>Status:</b> <span class="badge bg-primary">${c.status}</span><br>
+<b>Dibuat:</b> ${new Date(c.createdAt).toLocaleString()}<br><br>
+
+
+<!-- Update Status -->
+<button class="btn btn-sm btn-warning" onclick="updateConsultStatus(${c.id}, 'APPROVED')">Set APPROVED</button>
+<button class="btn btn-sm btn-success" onclick="updateConsultStatus(${c.id}, 'REJECT')">Set REJECT</button>
+<br><br>
+
+
+<!-- Submit Result Notes -->
+<textarea id="notes_${c.id}" class="form-control mb-2" placeholder="Masukkan hasil konsultasi"></textarea>
+<button class="btn btn-sm btn-primary" onclick="submitConsultResult(${c.id})">Submit Result</button>
+<br><br>
+
+
+<!-- Upload Result File -->
+<b>File Result Consultation:</b>
+<input type="file" id="file_${c.id}" class="form-control mb-2" />
+<button class="btn btn-sm btn-secondary" onclick="uploadResultFile(${c.id})">Upload File</button>
+</li>
+`;
+}).join("");
+}
+
+
+async function updateConsultStatus(id, newStatus) {
+await fetch(`${BASE}/consultations/${id}/status`, {
+method: "PATCH",
+headers: { ...auth, "Content-Type": "application/json" },
+body: JSON.stringify({ status: newStatus })
+});
+loadLawyerConsult();
+}
+
+
+async function submitConsultResult(id) {
+const notes = document.getElementById(`notes_${id}`).value;
+
+
+await fetch(`${BASE}/consultations/${id}/result`, {
+method: "PATCH",
+headers: { ...auth, "Content-Type": "application/json" },
+body: JSON.stringify({ notes })
+});
+loadLawyerConsult();
+}
+
+
+  /* ==============================
+      INITIAL LOAD
+  ===============================*/
   loadProfile();
   loadFiles();
+  loadBusiness();
   loadConsult();
+  loadAdminBusiness();
+  loadAdminConsult();
+  loadAdminFiles();
+  loadLawyerConsult();
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
 </body>
 </html>

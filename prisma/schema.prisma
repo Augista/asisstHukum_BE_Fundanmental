@@ -10,6 +10,7 @@ generator client {
 enum Role {
   OWNER
   ADMIN
+  LAWYER
 }
 
 model User {
@@ -33,7 +34,6 @@ model Lawyer {
   user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   businesses    Business[]     @relation("LawyerBusinesses")
-
   consultations Consultation[] @relation("ConsultationLawyer")
 
   createdAt DateTime @default(now())
@@ -71,11 +71,24 @@ model Consultation {
   status ConsultationStatus @default(PENDING)
   notes  String?
 
-  resultFileId Int?        @unique
-  resultFile   FileResult? @relation("ConsultationResultFile", fields: [resultFileId], references: [id])
+  // kembali ke skema lama → FileResult.consultationId
+  resultFile FileResult? @relation("ConsultationResultFile")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model FileResult {
+  id             Int           @id @default(autoincrement())
+  businessId     Int
+  business       Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  consultationId Int?          @unique
+ consultation Consultation? @relation("ConsultationResultFile", fields: [consultationId], references: [id])
+
+  filename       String
+  url            String
+  createdAt      DateTime      @default(now())
 }
 
 model Permit {
@@ -94,17 +107,6 @@ model FileBusiness {
   filename   String
   url        String
   createdAt  DateTime @default(now())
-}
-
-model FileResult {
-  id           Int           @id @default(autoincrement())
-  businessId   Int
-  business     Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  filename     String
-  url          String
-  createdAt    DateTime      @default(now())
-
-  consultation Consultation? @relation("ConsultationResultFile")
 }
 
 enum ConsultationStatus {

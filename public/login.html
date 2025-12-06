@@ -1,177 +1,151 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>UMKM Legal Support | Auth</title>
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-    />
-  </head>
-  <body class="bg-light">
-    <div class="container vh-100 d-flex justify-content-center align-items-center">
-      <div class="card p-4 shadow-sm" style="width: 420px">
-        <h4 class="mb-1 text-center">SME Legal Assistance</h4>
-        <p class="text-muted text-center mb-3">Masuk atau daftar akun owner</p>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>UMKM Legal Support | Auth</title>
 
-        <div id="alert" class="alert alert-danger d-none" role="alert"></div>
-        <div id="success" class="alert alert-success d-none" role="alert"></div>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+</head>
 
-        <ul class="nav nav-tabs mb-3" id="authTabs" role="tablist">
-          <li class="nav-item" role="presentation">
-            <button
-              class="nav-link active"
-              id="login-tab"
-              data-bs-toggle="tab"
-              data-bs-target="#login-pane"
-              type="button"
-              role="tab"
-            >
-              Login
-            </button>
-          </li>
-          <li class="nav-item" role="presentation">
-            <button
-              class="nav-link"
-              id="register-tab"
-              data-bs-toggle="tab"
-              data-bs-target="#register-pane"
-              type="button"
-              role="tab"
-            >
-              Register Owner
-            </button>
-          </li>
-        </ul>
+<body class="bg-light">
+  <div class="container vh-100 d-flex justify-content-center align-items-center">
+    <div class="card p-4 shadow-sm" style="width: 420px">
+      <h4 class="mb-1 text-center">SME Legal Assistance</h4>
+      <p class="text-muted text-center mb-3">Masuk atau daftar akun owner</p>
 
-        <div class="tab-content" id="authTabsContent">
-          <div class="tab-pane fade show active" id="login-pane" role="tabpanel">
-            <div class="mb-3">
-              <label for="loginEmail" class="form-label">Email</label>
-              <input id="loginEmail" type="email" class="form-control" placeholder="owner@email.com" />
-            </div>
-            <div class="mb-3">
-              <label for="loginPassword" class="form-label">Password</label>
-              <input id="loginPassword" type="password" class="form-control" placeholder="••••••••" />
-            </div>
-            <button id="loginBtn" class="btn btn-primary w-100">Masuk</button>
+      <div id="alert" class="alert alert-danger d-none" role="alert"></div>
+      <div id="success" class="alert alert-success d-none" role="alert"></div>
+
+      <ul class="nav nav-tabs mb-3" id="authTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link active" id="login-tab" data-bs-toggle="tab" data-bs-target="#login-pane" type="button">
+            Login
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="register-tab" data-bs-toggle="tab" data-bs-target="#register-pane" type="button">
+            Register Owner
+          </button>
+        </li>
+      </ul>
+
+      <div class="tab-content">
+        <div class="tab-pane fade show active" id="login-pane">
+          <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input id="loginEmail" type="email" class="form-control" placeholder="owner@email.com" />
           </div>
-
-          <div class="tab-pane fade" id="register-pane" role="tabpanel">
-            <div class="mb-3">
-              <label for="regName" class="form-label">Nama Usaha / Owner</label>
-              <input id="regName" type="text" class="form-control" placeholder="CV Maju Sejahtera" />
-            </div>
-            <div class="mb-3">
-              <label for="regEmail" class="form-label">Email</label>
-              <input id="regEmail" type="email" class="form-control" placeholder="owner@email.com" />
-            </div>
-            <div class="mb-3">
-              <label for="regPassword" class="form-label">Password (min 6 karakter)</label>
-              <input id="regPassword" type="password" class="form-control" placeholder="Minimal 6 karakter" />
-            </div>
-            <button id="registerBtn" class="btn btn-success w-100">Daftar sebagai Owner</button>
+          <div class="mb-3">
+            <label class="form-label">Password</label>
+            <input id="loginPassword" type="password" class="form-control" placeholder="•••••••" />
           </div>
+          <button id="loginBtn" class="btn btn-primary w-100">Masuk</button>
+        </div>
+
+        <div class="tab-pane fade" id="register-pane">
+          <div class="mb-3">
+            <label class="form-label">Nama Usaha / Owner</label>
+            <input id="regName" type="text" class="form-control" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input id="regEmail" type="email" class="form-control" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Password</label>
+            <input id="regPassword" type="password" class="form-control" />
+          </div>
+          <button id="registerBtn" class="btn btn-success w-100">Daftar</button>
         </div>
       </div>
     </div>
+  </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-      const alertBox = document.getElementById('alert');
-      const successBox = document.getElementById('success');
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  const BASE = "http://localhost:3001/api";
 
-      const showAlert = (message) => {
-        alertBox.textContent = message;
-        alertBox.classList.remove('d-none');
-        successBox.classList.add('d-none');
-      };
+  const alertBox = document.getElementById('alert');
+  const successBox = document.getElementById('success');
 
-      const showSuccess = (message) => {
-        successBox.textContent = message;
-        successBox.classList.remove('d-none');
-        alertBox.classList.add('d-none');
-      };
+  const showAlert = (msg) => {
+    alertBox.textContent = msg;
+    alertBox.classList.remove('d-none');
+    successBox.classList.add('d-none');
+  };
 
-      const clearMessages = () => {
-        alertBox.classList.add('d-none');
-        successBox.classList.add('d-none');
-      };
+  const showSuccess = (msg) => {
+    successBox.textContent = msg;
+    successBox.classList.remove('d-none');
+    alertBox.classList.add('d-none');
+  };
 
-      // Login handler
-      document.getElementById('loginBtn').addEventListener('click', async () => {
-        clearMessages();
-        const email = document.getElementById('loginEmail').value.trim();
-        const password = document.getElementById('loginPassword').value.trim();
+  const clearMsg = () => {
+    alertBox.classList.add('d-none');
+    successBox.classList.add('d-none');
+  };
 
-        if (!email || !password) {
-          return showAlert('Email dan password wajib diisi.');
-        }
+  // LOGIN
+  document.getElementById("loginBtn").addEventListener("click", async () => {
+    clearMsg();
 
-        try {
-          const res = await fetch('/api/auth/login', {
-            method: 'POST',
-            mode: 'cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password })
-          });
+    const email = loginEmail.value.trim();
+    const password = loginPassword.value.trim();
 
-          const data = await res.json();
-          if (!res.ok) {
-            return showAlert(data.error || data.message || 'Login gagal');
-          }
+    if (!email || !password) return showAlert("Email dan password wajib diisi.");
 
-          localStorage.setItem('token', data.token);
-          window.location.href = '/dashboard.html';
-        } catch (err) {
-          showAlert(err.message);
-        }
+    try {
+      const res = await fetch(`${BASE}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
       });
 
-      // Register handler (default owner role, sesuai endpoint backend)
-      document.getElementById('registerBtn').addEventListener('click', async () => {
-        clearMessages();
-        const name = document.getElementById('regName').value.trim();
-        const email = document.getElementById('regEmail').value.trim();
-        const password = document.getElementById('regPassword').value.trim();
+      if (!res.ok) return showAlert("Login gagal");
 
-        if (name.length < 3) {
-          return showAlert('Nama minimal 3 karakter.');
-        }
-        if (!email) {
-          return showAlert('Email wajib diisi.');
-        }
-        if (password.length < 6) {
-          return showAlert('Password minimal 6 karakter.');
-        }
+      const data = await res.json();
 
-        try {
-          const res = await fetch('/api/auth/register', {
-            method: 'POST',
-            mode: 'cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, email, password })
-          });
-          const data = await res.json();
+      const token = data.token || data.data?.token;
 
-          if (!res.ok) {
-            return showAlert(data.error || data.message || 'Registrasi gagal');
-          }
+      if (!token) return showAlert("Token tidak diterima dari server.");
 
-          showSuccess('Registrasi berhasil! Silakan login menggunakan akun baru.');
-          // optional: auto-fill login form
-          document.getElementById('loginEmail').value = email;
-          document.getElementById('loginPassword').value = '';
+      localStorage.setItem("token", token);
 
-          const triggerLoginTab = document.querySelector('button[data-bs-target="#login-pane"]');
-          if (triggerLoginTab) {
-            new bootstrap.Tab(triggerLoginTab).show();
-          }
-        } catch (err) {
-          showAlert(err.message);
-        }
+      window.location.href = "dashboard.html";   // FIX REDIRECT
+    } catch (err) {
+      showAlert("Gagal terhubung ke server.");
+    }
+  });
+
+  // REGISTER
+  document.getElementById("registerBtn").addEventListener("click", async () => {
+    clearMsg();
+
+    const name = regName.value.trim();
+    const email = regEmail.value.trim();
+    const password = regPassword.value.trim();
+
+    if (name.length < 3) return showAlert("Nama minimal 3 karakter.");
+    if (!email) return showAlert("Email required.");
+    if (password.length < 6) return showAlert("Password minimal 6 karakter.");
+
+    try {
+      const res = await fetch(`${BASE}/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password })
       });
-    </script>
-  </body>
+
+      const data = await res.json();
+
+      if (!res.ok) return showAlert(data.error || "Registrasi gagal.");
+
+      showSuccess("Registrasi berhasil! Silakan login.");
+    } catch (err) {
+      showAlert("Gagal terhubung ke server.");
+    }
+  });
+</script>
+</body>
 </html>

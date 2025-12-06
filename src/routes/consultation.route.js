@@ -49,12 +49,21 @@ router.patch(
 
 // Lawyer uploads result file
 router.post(
-  '/:id/result-file',
+  '/:consultationId/result-file',
   authenticate,
-  isLawyer, // Block admins and owners
+  isLawyer,
   upload.single('file'),
   consultCtrl.uploadResultFile
 );
+
+// List consultation result files( admin boleh, lawyer hanya file miliknya)
+router.get(
+  '/:consultationId/files',
+  authenticate,
+  authorizeRole(['lawyer', 'admin']),
+  consultCtrl.listFileResults
+);
+
 
 // Owner lists their consultations
 router.get(
